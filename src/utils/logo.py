@@ -7,7 +7,7 @@ def get_logo():
                 background-size: 200px 100px; /* Sets the background image size */
                 background-repeat: no-repeat; /* Prevents the image from repeating */
                 background-position: left 2rem top 1rem; /* Positions the image with a left margin of 1rem */
-                background-origin: content-box; /* Ensures the position is relative to the content box */                
+                background-origin: content-box; /* Ensures the position is relative to the content box */
             }
         </style>
     """

@@ -5,8 +5,12 @@ from page.varighed import show_conversation_duration
 
 with st.sidebar:
     st.sidebar.markdown(get_logo(), unsafe_allow_html=True)
-    selected = option_menu("IT Support Zylinc", ["Live Data", 'Varighed af samtale', 'Antal af samtaler', 'Resultat af opkald', 'Ventetid pr opkald'], 
-        icons=['house'], default_index=0)
+    selected = option_menu(
+        "IT Support Zylinc",
+        ["Live Data", 'Varighed af samtale', 'Antal af samtaler', 'Resultat af opkald', 'Ventetid pr opkald'],
+        icons=['house'],
+        default_index=0
+    )
 
 if selected == "Live Data":
     st.write("Se Live Data for IT Support Zylinc")
