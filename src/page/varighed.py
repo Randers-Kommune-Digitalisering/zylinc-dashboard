@@ -23,8 +23,13 @@ def show_conversation_duration():
         unique_dates = historical_data['StartTimeDenmark'].dt.date.unique()
         selected_date = st.date_input("Vælg en dato", min_value=min(unique_dates), max_value=max(unique_dates), key='date_input')
 
-        historical_data = historical_data[(historical_data['StartTimeDenmark'].dt.date == selected_date) &
-                                          (historical_data['StartTimeDenmark'].dt.time.between(datetime.strptime('06:00', '%H:%M').time(), datetime.strptime('16:00', '%H:%M').time()))]
+        historical_data = historical_data[
+            (historical_data['StartTimeDenmark'].dt.date == selected_date)
+            & (historical_data['StartTimeDenmark'].dt.time.between(
+                datetime.strptime('06:00', '%H:%M').time(),
+                datetime.strptime('16:00', '%H:%M').time()
+            ))
+        ]
 
         chart_data = historical_data[['StartTimeDenmark', 'DurationMinutes', 'AgentDisplayName']]
 
