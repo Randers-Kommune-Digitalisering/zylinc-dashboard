@@ -11,9 +11,9 @@ def show_conversation_duration():
 
     with col_1:
         content_tabs = sac.tabs([
-            sac.TabsItem('Dag', tag='Dag'), 
-            sac.TabsItem('Uge', tag='Uge'), 
-            sac.TabsItem('Måned', tag='Måned'), 
+            sac.TabsItem('Dag', tag='Dag'),
+            sac.TabsItem('Uge', tag='Uge'),
+            sac.TabsItem('Måned', tag='Måned'),
             sac.TabsItem('Kvartal', tag='Kvartal'),
         ], color='dark', size='md', position='top', align='start', use_container_width=True)
 
@@ -23,7 +23,7 @@ def show_conversation_duration():
         unique_dates = historical_data['StartTimeDenmark'].dt.date.unique()
         selected_date = st.date_input("Vælg en dato", min_value=min(unique_dates), max_value=max(unique_dates), key='date_input')
 
-        historical_data = historical_data[(historical_data['StartTimeDenmark'].dt.date == selected_date) & 
+        historical_data = historical_data[(historical_data['StartTimeDenmark'].dt.date == selected_date) &
                                           (historical_data['StartTimeDenmark'].dt.time.between(datetime.strptime('06:00', '%H:%M').time(), datetime.strptime('16:00', '%H:%M').time()))]
 
         chart_data = historical_data[['StartTimeDenmark', 'DurationMinutes', 'AgentDisplayName']]
