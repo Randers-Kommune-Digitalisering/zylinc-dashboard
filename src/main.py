@@ -2,6 +2,7 @@ import streamlit as st
 from utils.logo import get_logo
 from streamlit_option_menu import option_menu
 from page.varighed import show_conversation_duration
+from page.queue_time import show_queue_time
 
 with st.sidebar:
     st.sidebar.markdown(get_logo(), unsafe_allow_html=True)
@@ -21,4 +22,4 @@ elif selected == 'Antal af samtaler':
 elif selected == 'Resultat af opkald':
     st.write("Resultat af opkald")
 elif selected == 'Ventetid pr opkald':
-    st.write("Ventetid pr opkald")
+    show_queue_time()
