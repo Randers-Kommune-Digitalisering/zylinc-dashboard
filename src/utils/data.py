@@ -19,6 +19,7 @@ def load_and_process_data(file_path):
     historical_data = pd.read_csv(file_path)
 
     historical_data['DurationMinutes'] = historical_data['Sum af TotalDurationInMilliseconds'].apply(convert_milliseconds_to_minutes).round(2)
+    historical_data['QueueDurationMinutes'] = historical_data['Sum af EventDurationInMilliseconds'].apply(convert_milliseconds_to_minutes).round(2)
     historical_data['StartTimeDenmark'] = historical_data['StartTimeUtc'].apply(convert_to_denmark_time)
 
     historical_data['StartTimeDenmark'] = pd.to_datetime(historical_data['StartTimeDenmark'])
