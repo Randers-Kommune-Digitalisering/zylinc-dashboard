@@ -105,8 +105,47 @@ def show_conversation_duration():
             height=500
         )
         st.altair_chart(chart, use_container_width=True)
-    elif content_tabs == 'Måned':
-        st.write("Varighed af samtale(Måned)")
+    if content_tabs == 'Måned':
+        unique_months = historical_data['StartTimeDenmark'].dt.to_period('M').unique()
+        month_names = {1: 'Januar', 2: 'Februar', 3: 'Marts', 4: 'April', 5: 'Maj', 6: 'Juni', 7: 'Juli', 8: 'August', 9: 'September', 10: 'Oktober', 11: 'November', 12: 'December'}
+        month_options = [(month.month, month_names[month.month]) for month in unique_months]
+        selected_month = st.selectbox("Vælg en måned", month_options, format_func=lambda x: x[1], key='month_select')
+
+        selected_month_number = selected_month[0]
+        selected_year = unique_months[0].year
+
+        historical_data_month = historical_data[historical_data['StartTimeDenmark'].dt.to_period('M') == pd.Period(year=selected_year, month=selected_month_number, freq='M')]
+
+        previous_month = pd.Period(year=selected_year, month=selected_month_number, freq='M') - 1
+        historical_data_previous_month = historical_data[historical_data['StartTimeDenmark'].dt.to_period('M') == previous_month]
+
+        answered_calls_month = historical_data_month[historical_data_month['Result'] == 'Answered'].shape[0]
+        missed_calls_month = historical_data_month[historical_data_month['Result'] == 'Missed'].shape[0]
+
+        answered_calls_previous_month = historical_data_previous_month[historical_data_previous_month['Result'] == 'Answered'].shape[0]
+        missed_calls_previous_month = historical_data_previous_month[historical_data_previous_month['Result'] == 'Missed'].shape[0]
+
+        delta_answered_calls = answered_calls_month - answered_calls_previous_month
+        delta_missed_calls = missed_calls_month - missed_calls_previous_month
+
+        st.metric(label="Antal besvarede opkald", value=answered_calls_month, delta=delta_answered_calls)
+        st.metric(label="Antal mistede opkald", value=missed_calls_month, delta=delta_missed_calls, delta_color="inverse")
+
+        chart_data = historical_data_month[['StartTimeDenmark', 'DurationMinutes', 'AgentDisplayName']]
+
+        st.write("## Varighed af samtale(Måned)")
+        chart = alt.Chart(chart_data).mark_bar().encode(
+            x=alt.X('StartTimeDenmark:T', title='Tidspunkt', axis=alt.Axis(format='%Y-%m-%d %H:%M')),
+            y=alt.Y('DurationMinutes:Q', title='Varighed (minutter)'),
+            color=alt.Color('AgentDisplayName:N', title='Agent'),
+            tooltip=[alt.Tooltip('StartTimeDenmark:T', title='Tidspunkt', format='%Y-%m-%d %H:%M'), alt.Tooltip('DurationMinutes:Q', title='Varighed (minutter)'), alt.Tooltip('AgentDisplayName:N', title='Agent')]
+        ).properties(
+            height=500
+        ).facet(
+            facet='AgentDisplayName:N',
+            columns=1
+        )
+        st.altair_chart(chart, use_container_width=True)
     elif content_tabs == 'Kvartal':
         st.write("This is the Varighed af samtale(Kvatal) tab")
 
