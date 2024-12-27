@@ -1,6 +1,6 @@
 import streamlit as st
 import streamlit_antd_components as sac
-from datetime import datetime
+from datetime import datetime, timedelta
 import altair as alt
 from utils.data import load_and_process_data
 from utils.config import CSV_PATH
@@ -41,7 +41,7 @@ def show_conversation_duration():
         delta_missed_calls = missed_calls_today - missed_calls_yesterday
 
         st.metric(label="Antal besvarede opkald", value=answered_calls_today, delta=delta_answered_calls)
-        st.metric(label="Antal mistede opkald", value=missed_calls_today, delta=delta_missed_calls)
+        st.metric(label="Antal mistede opkald", value=missed_calls_today, delta=delta_missed_calls, delta_color="inverse")
 
         chart_data = historical_data_today[['StartTimeDenmark', 'DurationMinutes', 'AgentDisplayName']]
 
@@ -56,7 +56,55 @@ def show_conversation_duration():
         )
         st.altair_chart(chart, use_container_width=True)
     elif content_tabs == 'Uge':
-        st.write("This is the Varighed af samtale(Uge) tab")
+        unique_weeks = historical_data['StartTimeDenmark'].dt.isocalendar().week.unique()
+        selected_week = st.selectbox("Vælg en uge", unique_weeks, format_func=lambda x: f'Uge {x}')
+
+        start_of_week = pd.to_datetime(f'{datetime.now().year}-W{int(selected_week)}-1', format='%Y-W%W-%w')
+        end_of_week = start_of_week + timedelta(days=5)
+
+        historical_data_week = historical_data[(historical_data['StartTimeDenmark'] >= start_of_week) &
+                                               (historical_data['StartTimeDenmark'] <= end_of_week)]
+
+        previous_week_start = start_of_week - timedelta(weeks=1)
+        previous_week_end = end_of_week - timedelta(weeks=1)
+
+        historical_data_previous_week = historical_data[(historical_data['StartTimeDenmark'] >= previous_week_start) &
+                                                        (historical_data['StartTimeDenmark'] <= previous_week_end)]
+
+        answered_calls_week = historical_data_week[historical_data_week['Result'] == 'Answered'].shape[0]
+        missed_calls_week = historical_data_week[historical_data_week['Result'] == 'Missed'].shape[0]
+
+        answered_calls_previous_week = historical_data_previous_week[historical_data_previous_week['Result'] == 'Answered'].shape[0]
+        missed_calls_previous_week = historical_data_previous_week[historical_data_previous_week['Result'] == 'Missed'].shape[0]
+
+        delta_answered_calls_week = answered_calls_week - answered_calls_previous_week
+        delta_missed_calls_week = missed_calls_week - missed_calls_previous_week
+
+        st.metric(label="Antal besvarede opkald (Uge)", value=answered_calls_week, delta=delta_answered_calls_week)
+        st.metric(label="Antal mistede opkald (Uge)", value=missed_calls_week, delta=delta_missed_calls_week, delta_color="inverse")
+
+        chart_data = historical_data_week[['StartTimeDenmark', 'DurationMinutes', 'AgentDisplayName']]
+        chart_data['DayOfWeek'] = chart_data['StartTimeDenmark'].dt.day_name()
+
+        day_name_map = {
+            'Monday': 'Mandag',
+            'Tuesday': 'Tirsdag',
+            'Wednesday': 'Onsdag',
+            'Thursday': 'Torsdag',
+            'Friday': 'Fredag'
+        }
+        chart_data['DayOfWeek'] = chart_data['DayOfWeek'].map(day_name_map)
+
+        st.write("## Varighed af samtale(Uge)")
+        chart = alt.Chart(chart_data).mark_bar().encode(
+            x=alt.X('DayOfWeek:N', title='Ugedag', sort=['Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag'], axis=alt.Axis(labelAngle=0)),
+            y=alt.Y('DurationMinutes:Q', title='Varighed (minutter)'),
+            color=alt.Color('AgentDisplayName:N', title='Agent'),
+            tooltip=[alt.Tooltip('StartTimeDenmark:T', title='Tidspunkt', format='%Y-%m-%d %H:%M'), alt.Tooltip('DurationMinutes:Q', title='Varighed (minutter)'), alt.Tooltip('AgentDisplayName:N', title='Agent')]
+        ).properties(
+            height=500
+        )
+        st.altair_chart(chart, use_container_width=True)
     elif content_tabs == 'Måned':
         st.write("Varighed af samtale(Måned)")
     elif content_tabs == 'Kvartal':
