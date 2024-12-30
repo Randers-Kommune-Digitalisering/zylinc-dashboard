@@ -81,3 +81,36 @@ def show_queue_time():
             height=500
         )
         st.altair_chart(chart, use_container_width=True)
+
+    if content_tabs == 'Måned':
+        unique_years = historical_data['StartTimeDenmark'].dt.year.unique()
+        selected_year = st.selectbox("Vælg et år", unique_years, format_func=lambda x: f'{x}', key='year_select')
+
+        unique_months = historical_data[historical_data['StartTimeDenmark'].dt.year == selected_year]['StartTimeDenmark'].dt.to_period('M').unique()
+        month_names = {1: 'Januar', 2: 'Februar', 3: 'Marts', 4: 'April', 5: 'Maj', 6: 'Juni', 7: 'Juli', 8: 'August', 9: 'September', 10: 'Oktober', 11: 'November', 12: 'December'}
+        month_options = [(month.month, month_names[month.month]) for month in unique_months]
+        selected_month = st.selectbox("Vælg en måned", month_options, format_func=lambda x: x[1], key='month_select')
+
+        selected_month_number = selected_month[0]
+
+        historical_data_month = historical_data[historical_data['StartTimeDenmark'].dt.to_period('M') == pd.Period(year=selected_year, month=selected_month_number, freq='M')]
+
+        avg_wait_time_month = historical_data_month['QueueDurationMinutes'].mean()
+        avg_wait_time_month = 0 if pd.isna(avg_wait_time_month) else avg_wait_time_month
+
+        st.metric(label="Gennemsnitlig ventetid i måned", value=convert_minutes_to_hms(avg_wait_time_month))
+
+        queue_data = historical_data_month[historical_data_month['ConversationEventType'].isin(['JoinedQueue', 'LeftQueue'])]
+
+        queue_data['QueueDurationHMS'] = queue_data['QueueDurationMinutes'].apply(convert_minutes_to_hms)
+
+        st.write("## Ventetid i kø (Måned)")
+        chart = alt.Chart(queue_data).mark_bar().encode(
+            x=alt.X('StartTimeDenmark:T', title='Tidspunkt', axis=alt.Axis(format='%Y-%m-%d %H:%M')),
+            y=alt.Y('QueueDurationMinutes:Q', title='Ventetid (minutter)'),
+            color=alt.Color('QueueName:N', title='Kø'),
+            tooltip=[alt.Tooltip('StartTimeDenmark:T', title='Tidspunkt', format='%Y-%m-%d %H:%M'), alt.Tooltip('QueueDurationHMS:N', title='Ventetid'), alt.Tooltip('QueueName:N', title='Kø')]
+        ).properties(
+            height=500
+        )
+        st.altair_chart(chart, use_container_width=True)
