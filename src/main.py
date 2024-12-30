@@ -5,6 +5,8 @@ from page.duration import show_conversation_duration
 from page.queue_time import show_queue_time
 from page.live import display_live_data
 
+st.set_page_config(page_title="IT-Support", page_icon="assets/favicon.ico", layout="wide")
+
 with st.sidebar:
     st.sidebar.markdown(get_logo(), unsafe_allow_html=True)
     selected = option_menu(
