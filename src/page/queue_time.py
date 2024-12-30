@@ -1,6 +1,6 @@
 import streamlit as st
 import streamlit_antd_components as sac
-from datetime import datetime
+from datetime import datetime, timedelta
 import altair as alt
 from utils.data import load_and_process_data
 from utils.time import convert_minutes_to_hms
@@ -14,6 +14,8 @@ def show_queue_time():
     with col_1:
         content_tabs = sac.tabs([
             sac.TabsItem('Dag', tag='Dag'),
+            sac.TabsItem('Uge', tag='Uge'),
+            sac.TabsItem('Måned', tag='Måned'),
         ], color='dark', size='md', position='top', align='start', use_container_width=True)
 
     historical_data = load_and_process_data(CSV_PATH)
@@ -47,5 +49,32 @@ def show_queue_time():
         )
         st.altair_chart(chart, use_container_width=True)
 
+    if content_tabs == 'Uge':
+        unique_weeks = historical_data['StartTimeDenmark'].dt.isocalendar().week.unique()
+        selected_week = st.selectbox("Vælg en uge", unique_weeks, format_func=lambda x: f'Uge {x}')
 
-show_queue_time()
+        start_of_week = pd.to_datetime(f'{datetime.now().year}-W{int(selected_week)}-1', format='%Y-W%W-%w')
+        end_of_week = start_of_week + timedelta(days=6)
+
+        historical_data_week = historical_data[(historical_data['StartTimeDenmark'] >= start_of_week) &
+                                               (historical_data['StartTimeDenmark'] <= end_of_week)]
+
+        avg_wait_time_week = historical_data_week['QueueDurationMinutes'].mean()
+        avg_wait_time_week = 0 if pd.isna(avg_wait_time_week) else avg_wait_time_week
+
+        st.metric(label="Gennemsnitlig ventetid i uge", value=convert_minutes_to_hms(avg_wait_time_week))
+
+        queue_data = historical_data_week[historical_data_week['ConversationEventType'].isin(['JoinedQueue', 'LeftQueue'])]
+
+        queue_data['QueueDurationHMS'] = queue_data['QueueDurationMinutes'].apply(convert_minutes_to_hms)
+
+        st.write("## Ventetid i kø (Uge)")
+        chart = alt.Chart(queue_data).mark_bar().encode(
+            x=alt.X('StartTimeDenmark:T', title='Tidspunkt', axis=alt.Axis(format='%Y-%m-%d %H:%M')),
+            y=alt.Y('QueueDurationMinutes:Q', title='Ventetid (minutter)'),
+            color=alt.Color('QueueName:N', title='Kø'),
+            tooltip=[alt.Tooltip('StartTimeDenmark:T', title='Tidspunkt', format='%Y-%m-%d %H:%M'), alt.Tooltip('QueueDurationHMS:N', title='Ventetid'), alt.Tooltip('QueueName:N', title='Kø')]
+        ).properties(
+            height=500
+        )
+        st.altair_chart(chart, use_container_width=True)
