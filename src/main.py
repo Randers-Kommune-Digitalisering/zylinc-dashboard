@@ -1,7 +1,7 @@
 import streamlit as st
 from utils.logo import get_logo
 from streamlit_option_menu import option_menu
-from page.varighed import show_conversation_duration
+from page.duration import show_conversation_duration
 from page.queue_time import show_queue_time
 
 with st.sidebar:

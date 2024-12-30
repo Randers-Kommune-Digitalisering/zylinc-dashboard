@@ -55,7 +55,7 @@ def show_conversation_duration():
             height=500
         )
         st.altair_chart(chart, use_container_width=True)
-    elif content_tabs == 'Uge':
+    if content_tabs == 'Uge':
         unique_weeks = historical_data['StartTimeDenmark'].dt.isocalendar().week.unique()
         selected_week = st.selectbox("Vælg en uge", unique_weeks, format_func=lambda x: f'Uge {x}')
 
@@ -146,8 +146,44 @@ def show_conversation_duration():
             columns=1
         )
         st.altair_chart(chart, use_container_width=True)
-    elif content_tabs == 'Kvartal':
-        st.write("This is the Varighed af samtale(Kvatal) tab")
+    if content_tabs == 'Kvartal':
+        unique_quarters = historical_data['StartTimeDenmark'].dt.to_period('Q').unique()
+        quarter_names = {1: 'Q1', 2: 'Q2', 3: 'Q3', 4: 'Q4'}
+        quarter_options = [(quarter.quarter, quarter_names[quarter.quarter]) for quarter in unique_quarters]
+        selected_quarter = st.selectbox("Vælg et kvartal", quarter_options, format_func=lambda x: x[1], key='quarter_select')
 
+        selected_quarter_number = selected_quarter[0]
+        selected_year = unique_quarters[0].year
 
-show_conversation_duration()
+        historical_data_quarter = historical_data[historical_data['StartTimeDenmark'].dt.to_period('Q') == pd.Period(year=selected_year, quarter=selected_quarter_number, freq='Q')]
+
+        previous_quarter = pd.Period(year=selected_year, quarter=selected_quarter_number, freq='Q') - 1
+        historical_data_previous_quarter = historical_data[historical_data['StartTimeDenmark'].dt.to_period('Q') == previous_quarter]
+
+        answered_calls_quarter = historical_data_quarter[historical_data_quarter['Result'] == 'Answered'].shape[0]
+        missed_calls_quarter = historical_data_quarter[historical_data_quarter['Result'] == 'Missed'].shape[0]
+
+        answered_calls_previous_quarter = historical_data_previous_quarter[historical_data_previous_quarter['Result'] == 'Answered'].shape[0]
+        missed_calls_previous_quarter = historical_data_previous_quarter[historical_data_previous_quarter['Result'] == 'Missed'].shape[0]
+
+        delta_answered_calls = answered_calls_quarter - answered_calls_previous_quarter
+        delta_missed_calls = missed_calls_quarter - missed_calls_previous_quarter
+
+        st.metric(label="Antal besvarede opkald", value=answered_calls_quarter, delta=delta_answered_calls)
+        st.metric(label="Antal mistede opkald", value=missed_calls_quarter, delta=delta_missed_calls, delta_color="inverse")
+
+        chart_data = historical_data_quarter[['StartTimeDenmark', 'DurationMinutes', 'AgentDisplayName']]
+
+        st.write("## Varighed af samtale(Kvartal)")
+        chart = alt.Chart(chart_data).mark_bar().encode(
+            x=alt.X('StartTimeDenmark:T', title='Tidspunkt', axis=alt.Axis(format='%Y-%m-%d %H:%M')),
+            y=alt.Y('DurationMinutes:Q', title='Varighed (minutter)'),
+            color=alt.Color('AgentDisplayName:N', title='Agent'),
+            tooltip=[alt.Tooltip('StartTimeDenmark:T', title='Tidspunkt', format='%Y-%m-%d %H:%M'), alt.Tooltip('DurationMinutes:Q', title='Varighed (minutter)'), alt.Tooltip('AgentDisplayName:N', title='Agent')]
+        ).properties(
+            height=500
+        ).facet(
+            facet='AgentDisplayName:N',
+            columns=1
+        )
+        st.altair_chart(chart, use_container_width=True)
