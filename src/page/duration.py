@@ -49,8 +49,8 @@ def show_conversation_duration():
         chart = alt.Chart(chart_data).mark_bar().encode(
             x=alt.X('StartTimeDenmark:T', title='Tidspunkt', axis=alt.Axis(format='%Y-%m-%d %H:%M')),
             y=alt.Y('DurationMinutes:Q', title='Varighed (minutter)'),
-            color=alt.Color('AgentDisplayName:N', title='Agent'),
-            tooltip=[alt.Tooltip('StartTimeDenmark:T', title='Tidspunkt', format='%Y-%m-%d %H:%M'), alt.Tooltip('DurationMinutes:Q', title='Varighed (minutter)'), alt.Tooltip('AgentDisplayName:N', title='Agent')]
+            color=alt.Color('AgentDisplayName:N', title='Medarbejder'),
+            tooltip=[alt.Tooltip('StartTimeDenmark:T', title='Tidspunkt', format='%Y-%m-%d %H:%M'), alt.Tooltip('DurationMinutes:Q', title='Varighed (minutter)'), alt.Tooltip('AgentDisplayName:N', title='Medarbejder')]
         ).properties(
             height=500
         )
@@ -99,8 +99,8 @@ def show_conversation_duration():
         chart = alt.Chart(chart_data).mark_bar().encode(
             x=alt.X('DayOfWeek:N', title='Ugedag', sort=['Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag'], axis=alt.Axis(labelAngle=0)),
             y=alt.Y('DurationMinutes:Q', title='Varighed (minutter)'),
-            color=alt.Color('AgentDisplayName:N', title='Agent'),
-            tooltip=[alt.Tooltip('StartTimeDenmark:T', title='Tidspunkt', format='%Y-%m-%d %H:%M'), alt.Tooltip('DurationMinutes:Q', title='Varighed (minutter)'), alt.Tooltip('AgentDisplayName:N', title='Agent')]
+            color=alt.Color('AgentDisplayName:N', title='Medarbejder'),
+            tooltip=[alt.Tooltip('StartTimeDenmark:T', title='Tidspunkt', format='%Y-%m-%d %H:%M'), alt.Tooltip('DurationMinutes:Q', title='Varighed (minutter)'), alt.Tooltip('AgentDisplayName:N', title='Medarbejder')]
         ).properties(
             height=500
         )
@@ -137,12 +137,12 @@ def show_conversation_duration():
         chart = alt.Chart(chart_data).mark_bar().encode(
             x=alt.X('StartTimeDenmark:T', title='Tidspunkt', axis=alt.Axis(format='%Y-%m-%d %H:%M')),
             y=alt.Y('DurationMinutes:Q', title='Varighed (minutter)'),
-            color=alt.Color('AgentDisplayName:N', title='Agent'),
-            tooltip=[alt.Tooltip('StartTimeDenmark:T', title='Tidspunkt', format='%Y-%m-%d %H:%M'), alt.Tooltip('DurationMinutes:Q', title='Varighed (minutter)'), alt.Tooltip('AgentDisplayName:N', title='Agent')]
+            color=alt.Color('AgentDisplayName:N', title='Medarbejder'),
+            tooltip=[alt.Tooltip('StartTimeDenmark:T', title='Tidspunkt', format='%Y-%m-%d %H:%M'), alt.Tooltip('DurationMinutes:Q', title='Varighed (minutter)'), alt.Tooltip('AgentDisplayName:N', title='Medarbejder')]
         ).properties(
             height=500
         ).facet(
-            facet='AgentDisplayName:N',
+            facet=alt.Facet('AgentDisplayName:N', title='Medarbejder'),
             columns=1
         )
         st.altair_chart(chart, use_container_width=True)
@@ -178,12 +178,12 @@ def show_conversation_duration():
         chart = alt.Chart(chart_data).mark_bar().encode(
             x=alt.X('StartTimeDenmark:T', title='Tidspunkt', axis=alt.Axis(format='%Y-%m-%d %H:%M')),
             y=alt.Y('DurationMinutes:Q', title='Varighed (minutter)'),
-            color=alt.Color('AgentDisplayName:N', title='Agent'),
-            tooltip=[alt.Tooltip('StartTimeDenmark:T', title='Tidspunkt', format='%Y-%m-%d %H:%M'), alt.Tooltip('DurationMinutes:Q', title='Varighed (minutter)'), alt.Tooltip('AgentDisplayName:N', title='Agent')]
+            color=alt.Color('AgentDisplayName:N', title='Medarbejder'),
+            tooltip=[alt.Tooltip('StartTimeDenmark:T', title='Tidspunkt', format='%Y-%m-%d %H:%M'), alt.Tooltip('DurationMinutes:Q', title='Varighed (minutter)'), alt.Tooltip('AgentDisplayName:N', title='Medarbejder')]
         ).properties(
             height=500
         ).facet(
-            facet='AgentDisplayName:N',
+            facet=alt.Facet('AgentDisplayName:N', title='Medarbejder'),
             columns=1
         )
         st.altair_chart(chart, use_container_width=True)
