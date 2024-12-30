@@ -50,10 +50,13 @@ def show_queue_time():
         st.altair_chart(chart, use_container_width=True)
 
     if content_tabs == 'Uge':
-        unique_weeks = historical_data['StartTimeDenmark'].dt.isocalendar().week.unique()
+        unique_years = historical_data['StartTimeDenmark'].dt.year.unique()
+        selected_year = st.selectbox("Vælg et år", unique_years, format_func=lambda x: f'{x}')
+
+        unique_weeks = historical_data[historical_data['StartTimeDenmark'].dt.year == selected_year]['StartTimeDenmark'].dt.isocalendar().week.unique()
         selected_week = st.selectbox("Vælg en uge", unique_weeks, format_func=lambda x: f'Uge {x}')
 
-        start_of_week = pd.to_datetime(f'{datetime.now().year}-W{int(selected_week)}-1', format='%Y-W%W-%w')
+        start_of_week = pd.to_datetime(f'{selected_year}-W{int(selected_week)}-1', format='%Y-W%W-%w')
         end_of_week = start_of_week + timedelta(days=6)
 
         historical_data_week = historical_data[(historical_data['StartTimeDenmark'] >= start_of_week) &

@@ -56,11 +56,14 @@ def show_conversation_duration():
         )
         st.altair_chart(chart, use_container_width=True)
     if content_tabs == 'Uge':
-        unique_weeks = historical_data['StartTimeDenmark'].dt.isocalendar().week.unique()
+        unique_years = historical_data['StartTimeDenmark'].dt.year.unique()
+        selected_year = st.selectbox("Vælg et år", unique_years, format_func=lambda x: f'{x}')
+
+        unique_weeks = historical_data[historical_data['StartTimeDenmark'].dt.year == selected_year]['StartTimeDenmark'].dt.isocalendar().week.unique()
         selected_week = st.selectbox("Vælg en uge", unique_weeks, format_func=lambda x: f'Uge {x}')
 
-        start_of_week = pd.to_datetime(f'{datetime.now().year}-W{int(selected_week)}-1', format='%Y-W%W-%w')
-        end_of_week = start_of_week + timedelta(days=5)
+        start_of_week = pd.to_datetime(f'{selected_year}-W{int(selected_week)}-1', format='%Y-W%W-%w')
+        end_of_week = start_of_week + timedelta(days=6)
 
         historical_data_week = historical_data[(historical_data['StartTimeDenmark'] >= start_of_week) &
                                                (historical_data['StartTimeDenmark'] <= end_of_week)]
@@ -106,13 +109,15 @@ def show_conversation_duration():
         )
         st.altair_chart(chart, use_container_width=True)
     if content_tabs == 'Måned':
-        unique_months = historical_data['StartTimeDenmark'].dt.to_period('M').unique()
+        unique_years = historical_data['StartTimeDenmark'].dt.year.unique()
+        selected_year = st.selectbox("Vælg et år", unique_years, format_func=lambda x: f'{x}', key='year_select')
+
+        unique_months = historical_data[historical_data['StartTimeDenmark'].dt.year == selected_year]['StartTimeDenmark'].dt.to_period('M').unique()
         month_names = {1: 'Januar', 2: 'Februar', 3: 'Marts', 4: 'April', 5: 'Maj', 6: 'Juni', 7: 'Juli', 8: 'August', 9: 'September', 10: 'Oktober', 11: 'November', 12: 'December'}
         month_options = [(month.month, month_names[month.month]) for month in unique_months]
         selected_month = st.selectbox("Vælg en måned", month_options, format_func=lambda x: x[1], key='month_select')
 
         selected_month_number = selected_month[0]
-        selected_year = unique_months[0].year
 
         historical_data_month = historical_data[historical_data['StartTimeDenmark'].dt.to_period('M') == pd.Period(year=selected_year, month=selected_month_number, freq='M')]
 
@@ -147,13 +152,15 @@ def show_conversation_duration():
         )
         st.altair_chart(chart, use_container_width=True)
     if content_tabs == 'Kvartal':
-        unique_quarters = historical_data['StartTimeDenmark'].dt.to_period('Q').unique()
+        unique_years = historical_data['StartTimeDenmark'].dt.year.unique()
+        selected_year = st.selectbox("Vælg et år", unique_years, format_func=lambda x: f'År {x}', key='year_select')
+
+        unique_quarters = historical_data[historical_data['StartTimeDenmark'].dt.year == selected_year]['StartTimeDenmark'].dt.to_period('Q').unique()
         quarter_names = {1: 'Q1', 2: 'Q2', 3: 'Q3', 4: 'Q4'}
         quarter_options = [(quarter.quarter, quarter_names[quarter.quarter]) for quarter in unique_quarters]
         selected_quarter = st.selectbox("Vælg et kvartal", quarter_options, format_func=lambda x: x[1], key='quarter_select')
 
         selected_quarter_number = selected_quarter[0]
-        selected_year = unique_quarters[0].year
 
         historical_data_quarter = historical_data[historical_data['StartTimeDenmark'].dt.to_period('Q') == pd.Period(year=selected_year, quarter=selected_quarter_number, freq='Q')]
 
