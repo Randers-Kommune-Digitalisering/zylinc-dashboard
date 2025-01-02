@@ -2,13 +2,17 @@ import streamlit as st
 import streamlit_antd_components as sac
 from datetime import datetime, timedelta
 import altair as alt
-from utils.data import load_and_process_data
 from utils.time import convert_minutes_to_hms
-from utils.config import CSV_PATH
 import pandas as pd
 
 
 def show_queue_time():
+    if 'historical_data' not in st.session_state:
+        st.warning("Upload venligst en CSV fil på upload-siden for at fortsætte.")
+        st.stop()
+
+    historical_data = st.session_state['historical_data']
+
     col_1 = st.columns([1])[0]
 
     with col_1:
@@ -17,8 +21,6 @@ def show_queue_time():
             sac.TabsItem('Uge', tag='Uge'),
             sac.TabsItem('Måned', tag='Måned'),
         ], color='dark', size='md', position='top', align='start', use_container_width=True)
-
-    historical_data = load_and_process_data(CSV_PATH)
 
     if content_tabs == 'Dag':
 
