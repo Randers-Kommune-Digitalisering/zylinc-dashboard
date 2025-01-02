@@ -3,6 +3,7 @@ import streamlit_antd_components as sac
 from datetime import datetime, timedelta
 import altair as alt
 import pandas as pd
+from utils.time import convert_minutes_to_hms
 
 
 def show_conversation_duration():
@@ -29,21 +30,9 @@ def show_conversation_duration():
         historical_data_today = historical_data[(historical_data['StartTimeDenmark'].dt.date == selected_date) &
                                                 (historical_data['StartTimeDenmark'].dt.time.between(datetime.strptime('06:00', '%H:%M').time(), datetime.strptime('16:00', '%H:%M').time()))]
 
-        yesterday = selected_date - pd.Timedelta(days=1)
-        historical_data_yesterday = historical_data[(historical_data['StartTimeDenmark'].dt.date == yesterday) &
-                                                    (historical_data['StartTimeDenmark'].dt.time.between(datetime.strptime('06:00', '%H:%M').time(), datetime.strptime('16:00', '%H:%M').time()))]
+        avg_duration_today = historical_data_today[historical_data_today['Result'] == 'Answered']['DurationMinutes'].mean()
 
-        answered_calls_today = historical_data_today[historical_data_today['Result'] == 'Answered'].shape[0]
-        missed_calls_today = historical_data_today[historical_data_today['Result'] == 'Missed'].shape[0]
-
-        answered_calls_yesterday = historical_data_yesterday[historical_data_yesterday['Result'] == 'Answered'].shape[0]
-        missed_calls_yesterday = historical_data_yesterday[historical_data_yesterday['Result'] == 'Missed'].shape[0]
-
-        delta_answered_calls = answered_calls_today - answered_calls_yesterday
-        delta_missed_calls = missed_calls_today - missed_calls_yesterday
-
-        st.metric(label="Antal besvarede opkald", value=answered_calls_today, delta=delta_answered_calls)
-        st.metric(label="Antal mistede opkald", value=missed_calls_today, delta=delta_missed_calls, delta_color="inverse")
+        st.metric(label="Gennemsnitlig varighed af besvarede opkald(Dag)", value=convert_minutes_to_hms(avg_duration_today))
 
         chart_data = historical_data_today[['StartTimeDenmark', 'DurationMinutes', 'AgentDisplayName']]
 
@@ -57,6 +46,7 @@ def show_conversation_duration():
             height=500
         )
         st.altair_chart(chart, use_container_width=True)
+
     if content_tabs == 'Uge':
         unique_years = historical_data['StartTimeDenmark'].dt.year.unique()
         selected_year = st.selectbox("Vælg et år", unique_years, format_func=lambda x: f'{x}')
@@ -70,23 +60,9 @@ def show_conversation_duration():
         historical_data_week = historical_data[(historical_data['StartTimeDenmark'] >= start_of_week) &
                                                (historical_data['StartTimeDenmark'] <= end_of_week)]
 
-        previous_week_start = start_of_week - timedelta(weeks=1)
-        previous_week_end = end_of_week - timedelta(weeks=1)
+        avg_duration_week = historical_data_week[historical_data_week['Result'] == 'Answered']['DurationMinutes'].mean()
 
-        historical_data_previous_week = historical_data[(historical_data['StartTimeDenmark'] >= previous_week_start) &
-                                                        (historical_data['StartTimeDenmark'] <= previous_week_end)]
-
-        answered_calls_week = historical_data_week[historical_data_week['Result'] == 'Answered'].shape[0]
-        missed_calls_week = historical_data_week[historical_data_week['Result'] == 'Missed'].shape[0]
-
-        answered_calls_previous_week = historical_data_previous_week[historical_data_previous_week['Result'] == 'Answered'].shape[0]
-        missed_calls_previous_week = historical_data_previous_week[historical_data_previous_week['Result'] == 'Missed'].shape[0]
-
-        delta_answered_calls_week = answered_calls_week - answered_calls_previous_week
-        delta_missed_calls_week = missed_calls_week - missed_calls_previous_week
-
-        st.metric(label="Antal besvarede opkald (Uge)", value=answered_calls_week, delta=delta_answered_calls_week)
-        st.metric(label="Antal mistede opkald (Uge)", value=missed_calls_week, delta=delta_missed_calls_week, delta_color="inverse")
+        st.metric(label="Gennemsnitlig varighed af besvarede opkald(Uge)", value=convert_minutes_to_hms(avg_duration_week))
 
         chart_data = historical_data_week[['StartTimeDenmark', 'DurationMinutes', 'AgentDisplayName']]
         chart_data['DayOfWeek'] = chart_data['StartTimeDenmark'].dt.day_name()
@@ -110,6 +86,7 @@ def show_conversation_duration():
             height=500
         )
         st.altair_chart(chart, use_container_width=True)
+
     if content_tabs == 'Måned':
         unique_years = historical_data['StartTimeDenmark'].dt.year.unique()
         selected_year = st.selectbox("Vælg et år", unique_years, format_func=lambda x: f'{x}', key='year_select')
@@ -123,20 +100,9 @@ def show_conversation_duration():
 
         historical_data_month = historical_data[historical_data['StartTimeDenmark'].dt.to_period('M') == pd.Period(year=selected_year, month=selected_month_number, freq='M')]
 
-        previous_month = pd.Period(year=selected_year, month=selected_month_number, freq='M') - 1
-        historical_data_previous_month = historical_data[historical_data['StartTimeDenmark'].dt.to_period('M') == previous_month]
+        avg_duration_month = historical_data_month[historical_data_month['Result'] == 'Answered']['DurationMinutes'].mean()
 
-        answered_calls_month = historical_data_month[historical_data_month['Result'] == 'Answered'].shape[0]
-        missed_calls_month = historical_data_month[historical_data_month['Result'] == 'Missed'].shape[0]
-
-        answered_calls_previous_month = historical_data_previous_month[historical_data_previous_month['Result'] == 'Answered'].shape[0]
-        missed_calls_previous_month = historical_data_previous_month[historical_data_previous_month['Result'] == 'Missed'].shape[0]
-
-        delta_answered_calls = answered_calls_month - answered_calls_previous_month
-        delta_missed_calls = missed_calls_month - missed_calls_previous_month
-
-        st.metric(label="Antal besvarede opkald", value=answered_calls_month, delta=delta_answered_calls)
-        st.metric(label="Antal mistede opkald", value=missed_calls_month, delta=delta_missed_calls, delta_color="inverse")
+        st.metric(label="Gennemsnitlig varighed af besvarede opkald(Måned)", value=convert_minutes_to_hms(avg_duration_month))
 
         chart_data = historical_data_month[['StartTimeDenmark', 'DurationMinutes', 'AgentDisplayName']]
 
@@ -153,6 +119,7 @@ def show_conversation_duration():
             columns=1
         )
         st.altair_chart(chart, use_container_width=True)
+
     if content_tabs == 'Kvartal':
         unique_years = historical_data['StartTimeDenmark'].dt.year.unique()
         selected_year = st.selectbox("Vælg et år", unique_years, format_func=lambda x: f'År {x}', key='year_select')
@@ -166,20 +133,9 @@ def show_conversation_duration():
 
         historical_data_quarter = historical_data[historical_data['StartTimeDenmark'].dt.to_period('Q') == pd.Period(year=selected_year, quarter=selected_quarter_number, freq='Q')]
 
-        previous_quarter = pd.Period(year=selected_year, quarter=selected_quarter_number, freq='Q') - 1
-        historical_data_previous_quarter = historical_data[historical_data['StartTimeDenmark'].dt.to_period('Q') == previous_quarter]
+        avg_duration_quarter = historical_data_quarter[historical_data_quarter['Result'] == 'Answered']['DurationMinutes'].mean()
 
-        answered_calls_quarter = historical_data_quarter[historical_data_quarter['Result'] == 'Answered'].shape[0]
-        missed_calls_quarter = historical_data_quarter[historical_data_quarter['Result'] == 'Missed'].shape[0]
-
-        answered_calls_previous_quarter = historical_data_previous_quarter[historical_data_previous_quarter['Result'] == 'Answered'].shape[0]
-        missed_calls_previous_quarter = historical_data_previous_quarter[historical_data_previous_quarter['Result'] == 'Missed'].shape[0]
-
-        delta_answered_calls = answered_calls_quarter - answered_calls_previous_quarter
-        delta_missed_calls = missed_calls_quarter - missed_calls_previous_quarter
-
-        st.metric(label="Antal besvarede opkald", value=answered_calls_quarter, delta=delta_answered_calls)
-        st.metric(label="Antal mistede opkald", value=missed_calls_quarter, delta=delta_missed_calls, delta_color="inverse")
+        st.metric(label="Gennemsnitlig varighed af besvarede opkald(Kvartal)", value=convert_minutes_to_hms(avg_duration_quarter))
 
         chart_data = historical_data_quarter[['StartTimeDenmark', 'DurationMinutes', 'AgentDisplayName']]
 
