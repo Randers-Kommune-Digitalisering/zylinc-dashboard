@@ -34,7 +34,7 @@ def show_queue_time():
 
         avg_wait_time_today = 0 if pd.isna(avg_wait_time_today) else avg_wait_time_today
 
-        st.metric(label="Gennemsnitlig ventetid i dag", value=convert_minutes_to_hms(avg_wait_time_today))
+        st.metric(label="Gennemsnitlig ventetid(Dag)", value=convert_minutes_to_hms(avg_wait_time_today))
 
         queue_data = historical_data_today[historical_data_today['ConversationEventType'].isin(['JoinedQueue', 'LeftQueue'])]
 
@@ -67,7 +67,7 @@ def show_queue_time():
         avg_wait_time_week = historical_data_week['QueueDurationMinutes'].mean()
         avg_wait_time_week = 0 if pd.isna(avg_wait_time_week) else avg_wait_time_week
 
-        st.metric(label="Gennemsnitlig ventetid i uge", value=convert_minutes_to_hms(avg_wait_time_week))
+        st.metric(label="Gennemsnitlig ventetid(Uge)", value=convert_minutes_to_hms(avg_wait_time_week))
 
         queue_data = historical_data_week[historical_data_week['ConversationEventType'].isin(['JoinedQueue', 'LeftQueue'])]
 
@@ -100,7 +100,7 @@ def show_queue_time():
         avg_wait_time_month = historical_data_month['QueueDurationMinutes'].mean()
         avg_wait_time_month = 0 if pd.isna(avg_wait_time_month) else avg_wait_time_month
 
-        st.metric(label="Gennemsnitlig ventetid i måned", value=convert_minutes_to_hms(avg_wait_time_month))
+        st.metric(label="Gennemsnitlig ventetid(Måned)", value=convert_minutes_to_hms(avg_wait_time_month))
 
         queue_data = historical_data_month[historical_data_month['ConversationEventType'].isin(['JoinedQueue', 'LeftQueue'])]
 
