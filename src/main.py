@@ -5,6 +5,7 @@ from page.duration import show_conversation_duration
 from page.queue_time import show_queue_time
 from page.live import display_live_data
 from page.upload import upload_csv_file
+from page.conversation_calls import show_conversation_call
 
 st.set_page_config(page_title="IT-Support", page_icon="assets/favicon.ico", layout="wide")
 
@@ -22,7 +23,7 @@ if selected == "Live Data":
 elif selected == 'Varighed af samtale':
     show_conversation_duration()
 elif selected == 'Antal af samtaler':
-    st.write("Antal af samtaler")
+    show_conversation_call()
 elif selected == 'Resultat af opkald':
     st.write("Resultat af opkald")
 elif selected == 'Ventetid pr opkald':
