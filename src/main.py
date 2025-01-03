@@ -6,6 +6,7 @@ from page.conversation_queue_time import show_queue_time
 from page.live import display_live_data
 from page.upload import upload_csv_file
 from page.conversation_calls import show_conversation_call
+from page.conversation_result import show_conversation_result
 from streamlit_keycloak import login
 
 from utils.config import KEYCLOAK_URL, KEYCLOAK_REALM, KEYCLOAK_CLIENT_ID
@@ -35,7 +36,7 @@ if keycloak.authenticated:
     elif selected == 'Antal af samtaler':
         show_conversation_call()
     elif selected == 'Resultat af opkald':
-        st.write("Resultat af opkald")
+        show_conversation_result()
     elif selected == 'Ventetid pr opkald':
         show_queue_time()
     elif selected == 'Upload CSV-fil':
