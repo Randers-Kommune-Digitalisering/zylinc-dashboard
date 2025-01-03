@@ -1,71 +1,45 @@
-import pandas as pd
 import streamlit as st
-import numpy as np
-import altair as alt
+from utils.logo import get_logo
+from streamlit_option_menu import option_menu
+from page.conversation_duration import show_conversation_duration
+from page.conversation_queue_time import show_queue_time
+from page.live import display_live_data
+from page.upload import upload_csv_file
+from page.conversation_calls import show_conversation_call
+from page.conversation_result import show_conversation_result
+from streamlit_keycloak import login
 
-# from utils.database import DatabaseClient # Uncomment when using database
-# from utils.config import DB_HOST, DB_USER, DB_PASS, DB_NAME # Uncomment when using database
+from utils.config import KEYCLOAK_URL, KEYCLOAK_REALM, KEYCLOAK_CLIENT_ID
 
-# db_client = DatabaseClient(db_type="mssql" ,database=DB_NAME, username=DB_USER, password=DB_PASS, host=DB_HOST) # Uncomment when using database
+st.set_page_config(page_title="IT-Support", page_icon="assets/favicon.ico", layout="wide")
 
-pd.set_option('display.max_columns', None)
-st.set_page_config(page_title="Streamlit-Template", layout="wide")
-st.title("Streamlit-Template")
-chart_tab, csv_tab = st.tabs(
-    ["Template til grafer", "Fra CSV til Charts"]
+keycloak = login(
+    url=KEYCLOAK_URL,
+    realm=KEYCLOAK_REALM,
+    client_id=KEYCLOAK_CLIENT_ID
 )
 
-with chart_tab:
-    st.write("Template til at lave grafer i Streamlit")
-    np.random.seed(42)
-    data = pd.DataFrame({
-        'Day': np.arange(1, 101),
-        'Product A': np.random.randint(50, 100, size=100),
-        'Product B': np.random.randint(30, 80, size=100),
-        'Product C': np.random.randint(20, 70, size=100)
-    })
+if keycloak.authenticated:
+    with st.sidebar:
+        st.sidebar.markdown(get_logo(), unsafe_allow_html=True)
+        selected = option_menu(
+            "IT Support Zylinc",
+            ["Live Data", 'Upload CSV-fil', 'Varighed af samtale', 'Resultat af opkald', 'Ventetid pr opkald', 'Antal af samtaler'],
+            icons=['house', 'cloud-upload'],
+            default_index=0
+        )
 
-    data_long = data.melt('Day', var_name='Product', value_name='Sales')
-
-    line_chart = alt.Chart(data_long).mark_line().encode(
-        x=alt.X('Day', title='Day'),
-        y=alt.Y('Sales', title='Sales'),
-        color='Product',
-        tooltip=['Day', 'Product', 'Sales']
-    )
-    st.altair_chart(line_chart, use_container_width=True)
-
-    bar_chart = alt.Chart(data_long).mark_bar().encode(
-        x=alt.X('Day', title='Day'),
-        y=alt.Y('Sales', title='Sales'),
-        color='Product',
-        tooltip=['Day', 'Product', 'Sales']
-    )
-    st.altair_chart(bar_chart, use_container_width=True)
-
-    area_chart = alt.Chart(data_long).mark_area().encode(
-        x=alt.X('Day', title='Day'),
-        y=alt.Y('Sales', title='Sales'),
-        color='Product',
-        tooltip=['Day', 'Product', 'Sales']
-    )
-    st.altair_chart(area_chart, use_container_width=True)
-
-with csv_tab:
-    csv_df = pd.read_csv('template.csv', sep=';')
-    csv_df = csv_df[['Device']]
-    device_counts = csv_df['Device'].value_counts().reset_index()
-    device_counts.columns = ['Device', 'Count']
-    top_8_devices = device_counts.nlargest(5, 'Count')
-
-    chart_col, table_col = st.columns(2)
-    with chart_col:
-        st.write("## Top 5 Devices")
-        device_chart = alt.Chart(top_8_devices).mark_bar().encode(
-            x=alt.X('Device', title='Device'),
-            y=alt.Y('Count', title='Number of devices'),
-            color=alt.Color('Device'),
-            tooltip=[alt.Tooltip('Device'), alt.Tooltip('Count')]
-        ).properties(
-            width=600, height=400)
-        st.altair_chart(device_chart, use_container_width=True)
+    if selected == "Live Data":
+        display_live_data()
+    elif selected == 'Varighed af samtale':
+        show_conversation_duration()
+    elif selected == 'Antal af samtaler':
+        show_conversation_call()
+    elif selected == 'Resultat af opkald':
+        show_conversation_result()
+    elif selected == 'Ventetid pr opkald':
+        show_queue_time()
+    elif selected == 'Upload CSV-fil':
+        upload_csv_file()
+else:
+    st.markdown('''<span style="color:red">Du er ikke logget ind med en gyldig Randers konto</span>''', unsafe_allow_html=True)
