@@ -57,8 +57,8 @@ def show_conversation_duration():
         start_of_week = pd.to_datetime(f'{selected_year}-W{int(selected_week)}-1', format='%Y-W%W-%w')
         end_of_week = start_of_week + pd.Timedelta(days=6)
 
-        historical_data_week = historical_data[(historical_data['StartTimeDenmark'] >= start_of_week) & 
-                                               (historical_data['StartTimeDenmark'] <= end_of_week) & 
+        historical_data_week = historical_data[(historical_data['StartTimeDenmark'] >= start_of_week) &
+                                               (historical_data['StartTimeDenmark'] <= end_of_week) &
                                                (historical_data['StartTimeDenmark'].dt.time.between(datetime.strptime('06:00', '%H:%M').time(), datetime.strptime('16:00', '%H:%M').time()))]
 
         avg_duration_week = historical_data_week[historical_data_week['Result'] == 'Answered']['DurationMinutes'].mean()
