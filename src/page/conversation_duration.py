@@ -1,6 +1,6 @@
 import streamlit as st
 import streamlit_antd_components as sac
-from datetime import datetime, timedelta
+from datetime import datetime
 import altair as alt
 import pandas as pd
 from utils.time import convert_minutes_to_hms
@@ -55,30 +55,21 @@ def show_conversation_duration():
         selected_week = st.selectbox("Vælg en uge", unique_weeks, format_func=lambda x: f'Uge {x}')
 
         start_of_week = pd.to_datetime(f'{selected_year}-W{int(selected_week)}-1', format='%Y-W%W-%w')
-        end_of_week = start_of_week + timedelta(days=6)
+        end_of_week = start_of_week + pd.Timedelta(days=6)
 
-        historical_data_week = historical_data[(historical_data['StartTimeDenmark'] >= start_of_week) &
-                                               (historical_data['StartTimeDenmark'] <= end_of_week)]
+        historical_data_week = historical_data[(historical_data['StartTimeDenmark'] >= start_of_week) & 
+                                               (historical_data['StartTimeDenmark'] <= end_of_week) & 
+                                               (historical_data['StartTimeDenmark'].dt.time.between(datetime.strptime('06:00', '%H:%M').time(), datetime.strptime('16:00', '%H:%M').time()))]
 
         avg_duration_week = historical_data_week[historical_data_week['Result'] == 'Answered']['DurationMinutes'].mean()
 
         st.metric(label="Gennemsnitlig varighed af besvarede opkald(Uge)", value=convert_minutes_to_hms(avg_duration_week))
 
         chart_data = historical_data_week[['StartTimeDenmark', 'DurationMinutes', 'AgentDisplayName']]
-        chart_data['DayOfWeek'] = chart_data['StartTimeDenmark'].dt.day_name()
-
-        day_name_map = {
-            'Monday': 'Mandag',
-            'Tuesday': 'Tirsdag',
-            'Wednesday': 'Onsdag',
-            'Thursday': 'Torsdag',
-            'Friday': 'Fredag'
-        }
-        chart_data['DayOfWeek'] = chart_data['DayOfWeek'].map(day_name_map)
 
         st.write("## Varighed af samtale(Uge)")
         chart = alt.Chart(chart_data).mark_bar().encode(
-            x=alt.X('DayOfWeek:N', title='Ugedag', sort=['Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag'], axis=alt.Axis(labelAngle=0)),
+            x=alt.X('StartTimeDenmark:T', title='Tidspunkt', axis=alt.Axis(format='%Y-%m-%d %H:%M')),
             y=alt.Y('DurationMinutes:Q', title='Varighed (minutter)'),
             color=alt.Color('AgentDisplayName:N', title='Medarbejder'),
             tooltip=[alt.Tooltip('StartTimeDenmark:T', title='Tidspunkt', format='%Y-%m-%d %H:%M'), alt.Tooltip('DurationMinutes:Q', title='Varighed (minutter)'), alt.Tooltip('AgentDisplayName:N', title='Medarbejder')]
