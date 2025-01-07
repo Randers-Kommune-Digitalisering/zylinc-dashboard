@@ -24,7 +24,7 @@ if keycloak.authenticated:
         st.sidebar.markdown(get_logo(), unsafe_allow_html=True)
         selected = option_menu(
             "IT Support Zylinc",
-            ["Live Data", 'Upload CSV-fil', 'Varighed af samtale', 'Resultat af opkald', 'Ventetid pr opkald', 'Antal af samtaler'],
+            ["Live Data", 'Hent historisk data', 'Varighed af samtale', 'Resultat af opkald', 'Ventetid pr opkald', 'Antal af samtaler'],
             icons=['house', 'cloud-upload'],
             default_index=0
         )
@@ -39,7 +39,7 @@ if keycloak.authenticated:
         show_conversation_result()
     elif selected == 'Ventetid pr opkald':
         show_queue_time()
-    elif selected == 'Upload CSV-fil':
+    elif selected == 'Hent historisk data':
         upload_csv_file()
 else:
     st.markdown('''<span style="color:red">Du er ikke logget ind med en gyldig Randers konto</span>''', unsafe_allow_html=True)

@@ -8,7 +8,7 @@ import pandas as pd
 
 def show_queue_time():
     if 'historical_data' not in st.session_state:
-        st.warning("Upload venligst en CSV fil på upload-siden for at fortsætte.")
+        st.warning("Gå venligst ind på Hent historisk data siden for at hente data")
         st.stop()
 
     historical_data = st.session_state['historical_data']
