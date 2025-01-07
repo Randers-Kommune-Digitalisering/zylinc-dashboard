@@ -18,6 +18,8 @@ RUN apt-get update && apt-get install --yes --no-install-recommends build-essent
 COPY . $HOME
 WORKDIR $HOME
 
+RUN mkdir -p /src/uploaded_files && chown -R 11001:11000 /src/uploaded_files
+
 # Install python packages
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
