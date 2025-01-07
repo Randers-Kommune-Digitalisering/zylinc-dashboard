@@ -26,3 +26,4 @@ QUEUES = ['IT_Digitalisering_1818']
 KEYCLOAK_URL = os.environ["KEYCLOAK_URL"].strip()
 KEYCLOAK_REALM = os.environ["KEYCLOAK_REALM"].strip()
 KEYCLOAK_CLIENT_ID = os.environ["KEYCLOAK_CLIENT_ID"].strip()
+UPLOAD_DIR = '/src/uploaded_files'

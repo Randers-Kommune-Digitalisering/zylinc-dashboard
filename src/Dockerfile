@@ -22,6 +22,9 @@ WORKDIR $HOME
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
+# Define a volume for uploaded files
+VOLUME /src/uploaded_files
+
 # Open port
 EXPOSE $PORT
 
