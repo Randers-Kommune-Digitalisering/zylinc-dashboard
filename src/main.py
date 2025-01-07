@@ -4,7 +4,7 @@ from streamlit_option_menu import option_menu
 from page.conversation_duration import show_conversation_duration
 from page.conversation_queue_time import show_queue_time
 from page.live import display_live_data
-from page.upload import upload_csv_file
+from page.upload import upload_csv_file, load_csv_file
 from page.conversation_calls import show_conversation_call
 from page.conversation_result import show_conversation_result
 from streamlit_keycloak import login
@@ -20,6 +20,8 @@ keycloak = login(
 )
 
 if keycloak.authenticated:
+    load_csv_file()
+
     with st.sidebar:
         st.sidebar.markdown(get_logo(), unsafe_allow_html=True)
         selected = option_menu(
