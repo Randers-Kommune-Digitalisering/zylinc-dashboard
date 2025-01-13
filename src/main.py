@@ -7,6 +7,7 @@ from page.live import display_live_data
 from page.upload import upload_csv_file, load_csv_file
 from page.conversation_calls import show_conversation_call
 from page.conversation_result import show_conversation_result
+from page.conversation_load import show_conversation_load
 from streamlit_keycloak import login
 
 from utils.config import KEYCLOAK_URL, KEYCLOAK_REALM, KEYCLOAK_CLIENT_ID
@@ -26,7 +27,7 @@ if keycloak.authenticated:
         st.sidebar.markdown(get_logo(), unsafe_allow_html=True)
         selected = option_menu(
             "IT Support Zylinc",
-            ["Live Data", 'Hent historisk data', 'Varighed af samtale', 'Resultat af opkald', 'Ventetid pr opkald', 'Antal af samtaler'],
+            ["Live Data", 'Hent historisk data', 'Varighed af samtale', 'Resultat af opkald', 'Ventetid pr opkald', 'Antal af samtaler', 'Belastning'],
             icons=['house', 'cloud-upload'],
             default_index=0
         )
@@ -43,5 +44,7 @@ if keycloak.authenticated:
         show_queue_time()
     elif selected == 'Hent historisk data':
         upload_csv_file()
+    elif selected == 'Belastning':
+        show_conversation_load()
 else:
     st.markdown('''<span style="color:red">Du er ikke logget ind med en gyldig Randers konto</span>''', unsafe_allow_html=True)
