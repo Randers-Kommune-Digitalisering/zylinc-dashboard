@@ -19,7 +19,6 @@ def show_conversation_duration():
         content_tabs = sac.tabs([
             sac.TabsItem('Dag', tag='Dag'),
             sac.TabsItem('Uge', tag='Uge'),
-            sac.TabsItem('Måned', tag='Måned'),
             sac.TabsItem('Kvartal', tag='Kvartal'),
         ], color='dark', size='md', position='top', align='start', use_container_width=True)
 
@@ -34,14 +33,15 @@ def show_conversation_duration():
 
         st.metric(label="Gennemsnitlig varighed af besvarede opkald(Dag)", value=convert_minutes_to_hms(avg_duration_today))
 
-        chart_data = historical_data_today[['StartTimeDenmark', 'DurationMinutes', 'AgentDisplayName']]
+        historical_data_today['TimeInterval'] = historical_data_today['StartTimeDenmark'].dt.floor('30T')
+        chart_data = historical_data_today.groupby(['TimeInterval', 'AgentDisplayName']).agg({'DurationMinutes': 'mean'}).reset_index()
 
-        st.write("## Varighed af samtale(Dag)")
+        st.write(f"## Varighed af samtale(Dag) - {selected_date}")
         chart = alt.Chart(chart_data).mark_bar().encode(
-            x=alt.X('StartTimeDenmark:T', title='Tidspunkt', axis=alt.Axis(format='%Y-%m-%d %H:%M')),
+            x=alt.X('TimeInterval:T', title='Tidspunkt', axis=alt.Axis(format='%H:%M')),
             y=alt.Y('DurationMinutes:Q', title='Varighed (minutter)'),
             color=alt.Color('AgentDisplayName:N', title='Medarbejder'),
-            tooltip=[alt.Tooltip('StartTimeDenmark:T', title='Tidspunkt', format='%Y-%m-%d %H:%M'), alt.Tooltip('DurationMinutes:Q', title='Varighed (minutter)'), alt.Tooltip('AgentDisplayName:N', title='Medarbejder')]
+            tooltip=[alt.Tooltip('TimeInterval:T', title='Tidspunkt', format='%H:%M'), alt.Tooltip('DurationMinutes:Q', title='Varighed (minutter)'), alt.Tooltip('AgentDisplayName:N', title='Medarbejder')]
         ).properties(
             height=500
         )
@@ -67,7 +67,7 @@ def show_conversation_duration():
 
         chart_data = historical_data_week[['StartTimeDenmark', 'DurationMinutes', 'AgentDisplayName']]
 
-        st.write("## Varighed af samtale(Uge)")
+        st.write(f"## Varighed af samtale(Uge) - {selected_year}, Uge {selected_week}")
         chart = alt.Chart(chart_data).mark_bar().encode(
             x=alt.X('StartTimeDenmark:T', title='Tidspunkt', axis=alt.Axis(format='%Y-%m-%d %H:%M')),
             y=alt.Y('DurationMinutes:Q', title='Varighed (minutter)'),
@@ -75,39 +75,6 @@ def show_conversation_duration():
             tooltip=[alt.Tooltip('StartTimeDenmark:T', title='Tidspunkt', format='%Y-%m-%d %H:%M'), alt.Tooltip('DurationMinutes:Q', title='Varighed (minutter)'), alt.Tooltip('AgentDisplayName:N', title='Medarbejder')]
         ).properties(
             height=500
-        )
-        st.altair_chart(chart, use_container_width=True)
-
-    if content_tabs == 'Måned':
-        unique_years = historical_data['StartTimeDenmark'].dt.year.unique()
-        selected_year = st.selectbox("Vælg et år", unique_years, format_func=lambda x: f'{x}', key='year_select')
-
-        unique_months = historical_data[historical_data['StartTimeDenmark'].dt.year == selected_year]['StartTimeDenmark'].dt.to_period('M').unique()
-        month_names = {1: 'Januar', 2: 'Februar', 3: 'Marts', 4: 'April', 5: 'Maj', 6: 'Juni', 7: 'Juli', 8: 'August', 9: 'September', 10: 'Oktober', 11: 'November', 12: 'December'}
-        month_options = [(month.month, month_names[month.month]) for month in unique_months]
-        selected_month = st.selectbox("Vælg en måned", month_options, format_func=lambda x: x[1], key='month_select')
-
-        selected_month_number = selected_month[0]
-
-        historical_data_month = historical_data[historical_data['StartTimeDenmark'].dt.to_period('M') == pd.Period(year=selected_year, month=selected_month_number, freq='M')]
-
-        avg_duration_month = historical_data_month[historical_data_month['Result'] == 'Answered']['DurationMinutes'].mean()
-
-        st.metric(label="Gennemsnitlig varighed af besvarede opkald(Måned)", value=convert_minutes_to_hms(avg_duration_month))
-
-        chart_data = historical_data_month[['StartTimeDenmark', 'DurationMinutes', 'AgentDisplayName']]
-
-        st.write("## Varighed af samtale(Måned)")
-        chart = alt.Chart(chart_data).mark_bar().encode(
-            x=alt.X('StartTimeDenmark:T', title='Tidspunkt', axis=alt.Axis(format='%Y-%m-%d %H:%M')),
-            y=alt.Y('DurationMinutes:Q', title='Varighed (minutter)'),
-            color=alt.Color('AgentDisplayName:N', title='Medarbejder'),
-            tooltip=[alt.Tooltip('StartTimeDenmark:T', title='Tidspunkt', format='%Y-%m-%d %H:%M'), alt.Tooltip('DurationMinutes:Q', title='Varighed (minutter)'), alt.Tooltip('AgentDisplayName:N', title='Medarbejder')]
-        ).properties(
-            height=500
-        ).facet(
-            facet=alt.Facet('AgentDisplayName:N', title='Medarbejder'),
-            columns=1
         )
         st.altair_chart(chart, use_container_width=True)
 
@@ -130,7 +97,7 @@ def show_conversation_duration():
 
         chart_data = historical_data_quarter[['StartTimeDenmark', 'DurationMinutes', 'AgentDisplayName']]
 
-        st.write("## Varighed af samtale(Kvartal)")
+        st.write(f"## Varighed af samtale(Kvartal) - {quarter_names[selected_quarter_number]} {selected_year}")
         chart = alt.Chart(chart_data).mark_bar().encode(
             x=alt.X('StartTimeDenmark:T', title='Tidspunkt', axis=alt.Axis(format='%Y-%m-%d %H:%M')),
             y=alt.Y('DurationMinutes:Q', title='Varighed (minutter)'),

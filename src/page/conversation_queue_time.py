@@ -39,13 +39,15 @@ def show_queue_time():
         queue_data = historical_data_today[historical_data_today['ConversationEventType'].isin(['JoinedQueue', 'LeftQueue'])]
 
         queue_data['QueueDurationHMS'] = queue_data['QueueDurationMinutes'].apply(convert_minutes_to_hms)
+        queue_data['TimeInterval'] = queue_data['StartTimeDenmark'].dt.floor('30T')
+        interval_data = queue_data.groupby(['TimeInterval', 'QueueName']).agg({'QueueDurationMinutes': 'mean'}).reset_index()
 
-        st.write("## Ventetid i kø (Dag)")
-        chart = alt.Chart(queue_data).mark_bar().encode(
-            x=alt.X('StartTimeDenmark:T', title='Tidspunkt', axis=alt.Axis(format='%Y-%m-%d %H:%M')),
+        st.write(f"## Ventetid i kø (Dag) - {selected_date}")
+        chart = alt.Chart(interval_data).mark_bar().encode(
+            x=alt.X('TimeInterval:T', title='Tidspunkt', axis=alt.Axis(format='%H:%M')),
             y=alt.Y('QueueDurationMinutes:Q', title='Ventetid (minutter)'),
             color=alt.Color('QueueName:N', title='Kø'),
-            tooltip=[alt.Tooltip('StartTimeDenmark:T', title='Tidspunkt', format='%Y-%m-%d %H:%M'), alt.Tooltip('QueueDurationHMS:N', title='Ventetid'), alt.Tooltip('QueueName:N', title='Kø')]
+            tooltip=[alt.Tooltip('TimeInterval:T', title='Tidspunkt', format='%H:%M'), alt.Tooltip('QueueDurationMinutes:Q', title='Ventetid (minutter)'), alt.Tooltip('QueueName:N', title='Kø')]
         ).properties(
             height=500
         )
@@ -73,7 +75,7 @@ def show_queue_time():
 
         queue_data['QueueDurationHMS'] = queue_data['QueueDurationMinutes'].apply(convert_minutes_to_hms)
 
-        st.write("## Ventetid i kø (Uge)")
+        st.write(f"## Ventetid i kø (Uge) - {selected_year}, Uge {selected_week}")
         chart = alt.Chart(queue_data).mark_bar().encode(
             x=alt.X('StartTimeDenmark:T', title='Tidspunkt', axis=alt.Axis(format='%Y-%m-%d %H:%M')),
             y=alt.Y('QueueDurationMinutes:Q', title='Ventetid (minutter)'),
@@ -106,7 +108,7 @@ def show_queue_time():
 
         queue_data['QueueDurationHMS'] = queue_data['QueueDurationMinutes'].apply(convert_minutes_to_hms)
 
-        st.write("## Ventetid i kø (Måned)")
+        st.write(f"## Ventetid i kø (Måned) - {selected_year}, Måned {month_names[selected_month_number]}")
         chart = alt.Chart(queue_data).mark_bar().encode(
             x=alt.X('StartTimeDenmark:T', title='Tidspunkt', axis=alt.Axis(format='%Y-%m-%d %H:%M')),
             y=alt.Y('QueueDurationMinutes:Q', title='Ventetid (minutter)'),
