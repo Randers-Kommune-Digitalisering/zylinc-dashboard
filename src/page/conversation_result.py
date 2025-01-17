@@ -28,28 +28,18 @@ def show_conversation_result():
         historical_data_today = historical_data[(historical_data['StartTimeDenmark'].dt.date == selected_date) &
                                                 (historical_data['StartTimeDenmark'].dt.time.between(datetime.strptime('06:00', '%H:%M').time(), datetime.strptime('16:00', '%H:%M').time()))]
 
-        yesterday = selected_date - pd.Timedelta(days=1)
-        historical_data_yesterday = historical_data[(historical_data['StartTimeDenmark'].dt.date == yesterday) &
-                                                    (historical_data['StartTimeDenmark'].dt.time.between(datetime.strptime('06:00', '%H:%M').time(), datetime.strptime('16:00', '%H:%M').time()))]
-
         answered_calls_today = historical_data_today[historical_data_today['Result'] == 'Answered'].shape[0]
         missed_calls_today = historical_data_today[historical_data_today['Result'] == 'Missed'].shape[0]
 
-        answered_calls_yesterday = historical_data_yesterday[historical_data_yesterday['Result'] == 'Answered'].shape[0]
-        missed_calls_yesterday = historical_data_yesterday[historical_data_yesterday['Result'] == 'Missed'].shape[0]
+        st.metric(label="Antal besvarede opkald", value=answered_calls_today)
+        st.metric(label="Antal mistede opkald", value=missed_calls_today)
 
-        delta_answered_calls = answered_calls_today - answered_calls_yesterday
-        delta_missed_calls = missed_calls_today - missed_calls_yesterday
+        historical_data_today['TimeInterval'] = historical_data_today['StartTimeDenmark'].dt.floor('30T')
+        interval_data = historical_data_today.groupby(['TimeInterval', 'Result']).size().reset_index(name='Antal opkald')
 
-        st.metric(label="Antal besvarede opkald", value=answered_calls_today, delta=delta_answered_calls)
-        st.metric(label="Antal mistede opkald", value=missed_calls_today, delta=delta_missed_calls, delta_color="inverse")
-
-        historical_data_today['Hour'] = historical_data_today['StartTimeDenmark'].dt.floor('H')
-        hourly_data = historical_data_today.groupby(['Hour', 'Result']).size().reset_index(name='Antal opkald')
-
-        st.write("## Resultat af opkald (Dag)")
-        base = alt.Chart(hourly_data).encode(
-            x=alt.X('Hour:T', title='Tidspunkt', axis=alt.Axis(format='%Y-%m-%d %H:%M')),
+        st.write(f"## Resultat af opkald (Dag) - {selected_date}")
+        base = alt.Chart(interval_data).encode(
+            x=alt.X('TimeInterval:T', title='Tidspunkt', axis=alt.Axis(format='%H:%M')),
             y=alt.Y('Antal opkald:Q', title='Antal opkald'),
             color=alt.condition(
                 alt.datum.Result == 'Answered',
@@ -61,7 +51,7 @@ def show_conversation_result():
         )
 
         points = base.mark_circle(size=60).encode(
-            tooltip=[alt.Tooltip('Hour:T', title='Tidspunkt', format='%Y-%m-%d %H:%M'), alt.Tooltip('Antal opkald:Q', title='Antal opkald'), alt.Tooltip('Result:N', title='Resultat')]
+            tooltip=[alt.Tooltip('TimeInterval:T', title='Tidspunkt', format='%H:%M'), alt.Tooltip('Antal opkald:Q', title='Antal opkald'), alt.Tooltip('Result:N', title='Resultat')]
         )
 
         text = base.mark_text(
@@ -88,23 +78,11 @@ def show_conversation_result():
 
         historical_data_week = historical_data[(historical_data['StartTimeDenmark'] >= start_of_week) & (historical_data['StartTimeDenmark'] <= end_of_week)]
 
-        previous_week = selected_week - 1
-        start_of_previous_week = pd.to_datetime(f'{selected_year}-W{int(previous_week)}-1', format='%Y-W%W-%w')
-        end_of_previous_week = start_of_previous_week + pd.Timedelta(days=6)
-
-        historical_data_previous_week = historical_data[(historical_data['StartTimeDenmark'] >= start_of_previous_week) & (historical_data['StartTimeDenmark'] <= end_of_previous_week)]
-
         answered_calls_week = historical_data_week[historical_data_week['Result'] == 'Answered'].shape[0]
         missed_calls_week = historical_data_week[historical_data_week['Result'] == 'Missed'].shape[0]
 
-        answered_calls_previous_week = historical_data_previous_week[historical_data_previous_week['Result'] == 'Answered'].shape[0]
-        missed_calls_previous_week = historical_data_previous_week[historical_data_previous_week['Result'] == 'Missed'].shape[0]
-
-        delta_answered_calls_week = answered_calls_week - answered_calls_previous_week
-        delta_missed_calls_week = missed_calls_week - missed_calls_previous_week
-
-        st.metric(label="Antal besvarede opkald", value=answered_calls_week, delta=delta_answered_calls_week)
-        st.metric(label="Antal mistede opkald", value=missed_calls_week, delta=delta_missed_calls_week, delta_color="inverse")
+        st.metric(label="Antal besvarede opkald", value=answered_calls_week)
+        st.metric(label="Antal mistede opkald", value=missed_calls_week)
 
         historical_data_week['Day'] = historical_data_week['StartTimeDenmark'].dt.floor('D')
         daily_data = historical_data_week.groupby(['Day', 'Result']).size().reset_index(name='Antal opkald')
@@ -131,7 +109,7 @@ def show_conversation_result():
             ordered=True
         )
 
-        st.write("## Antal samtaler (Uge)")
+        st.write(f"## Resultat af opkald (Uge) - {selected_year}, Uge {selected_week}")
         base = alt.Chart(daily_data).encode(
             x=alt.X('DateWithWeekday:N', title='Ugedag', axis=alt.Axis(labelAngle=0)),
             y=alt.Y('Antal opkald:Q', title='Antal opkald'),
@@ -173,25 +151,16 @@ def show_conversation_result():
 
         historical_data_month = historical_data[historical_data['StartTimeDenmark'].dt.to_period('M') == pd.Period(year=selected_year, month=selected_month_number, freq='M')]
 
-        previous_month = pd.Period(year=selected_year, month=selected_month_number, freq='M') - 1
-        historical_data_previous_month = historical_data[historical_data['StartTimeDenmark'].dt.to_period('M') == previous_month]
-
         answered_calls_month = historical_data_month[historical_data_month['Result'] == 'Answered'].shape[0]
         missed_calls_month = historical_data_month[historical_data_month['Result'] == 'Missed'].shape[0]
 
-        answered_calls_previous_month = historical_data_previous_month[historical_data_previous_month['Result'] == 'Answered'].shape[0]
-        missed_calls_previous_month = historical_data_previous_month[historical_data_previous_month['Result'] == 'Missed'].shape[0]
-
-        delta_answered_calls_month = answered_calls_month - answered_calls_previous_month
-        delta_missed_calls_month = missed_calls_month - missed_calls_previous_month
-
-        st.metric(label="Antal besvarede opkald", value=answered_calls_month, delta=delta_answered_calls_month)
-        st.metric(label="Antal mistede opkald", value=missed_calls_month, delta=delta_missed_calls_month, delta_color="inverse")
+        st.metric(label="Antal besvarede opkald", value=answered_calls_month)
+        st.metric(label="Antal mistede opkald", value=missed_calls_month)
 
         historical_data_month['Day'] = historical_data_month['StartTimeDenmark'].dt.floor('D')
         daily_data = historical_data_month.groupby(['Day', 'Result']).size().reset_index(name='Antal opkald')
 
-        st.write("## Resultat af opkald (Måned)")
+        st.write(f"## Resultat af opkald (Måned) - {selected_year}, Måned {month_names[selected_month_number]}")
         base = alt.Chart(daily_data).encode(
             x=alt.X('Day:T', title='Tidspunkt', axis=alt.Axis(format='%Y-%m-%d')),
             y=alt.Y('Antal opkald:Q', title='Antal opkald'),
