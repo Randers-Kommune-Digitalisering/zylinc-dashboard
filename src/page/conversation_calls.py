@@ -75,7 +75,7 @@ def show_conversation_call():
         selected_week = st.selectbox(
             "Vælg en uge",
             unique_weeks,
-            format_func=lambda x: f'Uge {x}', 
+            format_func=lambda x: f'Uge {x}',
             index=unique_weeks.tolist().index(st.session_state['selected_week']) if 'selected_week' in st.session_state and st.session_state['selected_week'] is not None else 0,
             key='week_select'
         )
@@ -147,7 +147,7 @@ def show_conversation_call():
         selected_year_month = st.selectbox(
             "Vælg et år",
             unique_years,
-            format_func=lambda x: f'{x}', 
+            format_func=lambda x: f'{x}',
             index=unique_years.tolist().index(st.session_state['selected_year_month']) if 'selected_year_month' in st.session_state and st.session_state['selected_year_month'] is not None else 0,
             key='year_select_month'
         )
@@ -162,7 +162,7 @@ def show_conversation_call():
         selected_month = st.selectbox(
             "Vælg en måned",
             month_options,
-            format_func=lambda x: x[1], 
+            format_func=lambda x: x[1],
             index=[month[0] for month in month_options].index(st.session_state['selected_month']) if 'selected_month' in st.session_state and st.session_state['selected_month'] is not None else 0,
             key='month_select'
         )
