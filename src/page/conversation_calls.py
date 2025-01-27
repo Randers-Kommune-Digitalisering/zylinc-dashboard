@@ -26,7 +26,7 @@ def show_conversation_call():
         selected_date = st.date_input("Vælg en dato", min_value=min(unique_dates), max_value=max(unique_dates), key='date_input')
 
         historical_data_today = historical_data[
-            (historical_data['StartTimeDenmark'].dt.date == selected_date) & 
+            (historical_data['StartTimeDenmark'].dt.date == selected_date) &
             (historical_data['StartTimeDenmark'].dt.time.between(datetime.strptime('06:00', '%H:%M').time(), datetime.strptime('16:00', '%H:%M').time()))
         ]
 
@@ -64,7 +64,7 @@ def show_conversation_call():
         selected_week = st.selectbox(
             "Vælg en uge",
             unique_weeks,
-            format_func=lambda x: f'Uge {x}', 
+            format_func=lambda x: f'Uge {x}',
             index=unique_weeks.tolist().index(st.session_state['selected_week']) if 'selected_week' in st.session_state and st.session_state['selected_week'] is not None else 0,
             key='week_select'
         )
@@ -126,7 +126,7 @@ def show_conversation_call():
         selected_year_month = st.selectbox(
             "Vælg et år",
             unique_years,
-            format_func=lambda x: f'{x}', 
+            format_func=lambda x: f'{x}',
             index=unique_years.tolist().index(st.session_state['selected_year_month']) if 'selected_year_month' in st.session_state and st.session_state['selected_year_month'] is not None else 0,
             key='year_select_month'
         )
