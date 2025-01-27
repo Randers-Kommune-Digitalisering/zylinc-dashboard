@@ -104,21 +104,29 @@ def show_conversation_duration():
             'Sunday': 'Søndag'
         }
 
-        chart_data['DayName'] = chart_data['StartTimeDenmark'].dt.strftime('%A').map(day_name_map)
-        chart_data['ConversationDateWithDay'] = chart_data['StartTimeDenmark'].dt.strftime('%Y-%m-%d') + ' (' + chart_data['DayName'] + ')'
+        chart_data['DayOfWeek'] = chart_data['StartTimeDenmark'].dt.day_name()
+        chart_data['DayOfWeek'] = chart_data['DayOfWeek'].map(day_name_map)
 
-        chart_data = chart_data.groupby(['ConversationDateWithDay', 'AgentDisplayName']).agg({'DurationMinutes': 'sum'}).reset_index()
+        all_weekdays = ['Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag']
+        chart_data['DayOfWeek'] = pd.Categorical(
+            chart_data['DayOfWeek'],
+            categories=all_weekdays,
+            ordered=True
+        )
 
-        st.write(f"## Varighed af samtale(Uge) - {selected_year_week}, Uge {selected_week}")
+        chart_data = chart_data.groupby(['DayOfWeek', 'AgentDisplayName']).agg({'DurationMinutes': 'sum'}).reset_index()
+
+        st.write(f"## Varighed af samtale (Uge) - {selected_year_week}, Uge {selected_week}")
         chart = alt.Chart(chart_data).mark_bar().encode(
-            x=alt.X('ConversationDateWithDay:N', title='Dato', axis=alt.Axis(labelAngle=-45)),
+            x=alt.X('DayOfWeek:O', title='Ugedag', sort=all_weekdays),
             y=alt.Y('DurationMinutes:Q', title='Varighed (minutter)'),
             color=alt.Color('AgentDisplayName:N', title='Medarbejder'),
-            tooltip=[alt.Tooltip('ConversationDateWithDay:N', title='Dato'), alt.Tooltip('DurationMinutes:Q', title='Varighed (minutter)'), alt.Tooltip('AgentDisplayName:N', title='Medarbejder')]
+            tooltip=[alt.Tooltip('DayOfWeek:O', title='Ugedag'), alt.Tooltip('DurationMinutes:Q', title='Varighed (minutter)'), alt.Tooltip('AgentDisplayName:N', title='Medarbejder')]
         ).properties(
             height=700,
             width=900
         )
+
         st.altair_chart(chart, use_container_width=True)
 
     if content_tabs == 'Kvartal':

@@ -43,34 +43,18 @@ def show_conversation_result():
         interval_data = historical_data_today.groupby(['TimeInterval', 'Result']).size().reset_index(name='Antal opkald')
 
         st.write(f"## Resultat af opkald (Dag) - {selected_date}")
-        base = alt.Chart(interval_data).encode(
+
+        chart = alt.Chart(interval_data).mark_bar().encode(
             x=alt.X('TimeInterval:T', title='Tidspunkt', axis=alt.Axis(format='%H:%M')),
-            y=alt.Y('Antal opkald:Q', title='Antal opkald'),
-            color=alt.condition(
-                alt.datum.Result == 'Answered',
-                alt.value('green'),
-                alt.value('red')
-            )
+            y='Antal opkald:Q',
+            color='Result:N',
+            tooltip=[alt.Tooltip('TimeInterval:T', title='Tidspunkt', format='%H:%M'), alt.Tooltip('Antal opkald:Q', title='Antal opkald'), alt.Tooltip('Result:N', title='Resultat')]
         ).properties(
             height=700,
             width=900
         )
 
-        points = base.mark_circle(size=60).encode(
-            tooltip=[alt.Tooltip('TimeInterval:T', title='Tidspunkt', format='%H:%M'), alt.Tooltip('Antal opkald:Q', title='Antal opkald'), alt.Tooltip('Result:N', title='Resultat')]
-        )
-
-        text = base.mark_text(
-            align='left',
-            baseline='middle',
-            dx=7
-        ).encode(
-            text='Antal opkald:Q'
-        )
-
-        chart = points + text
-
-        st.altair_chart(chart.interactive(), use_container_width=True)
+        st.altair_chart(chart, use_container_width=True)
 
     if content_tabs == 'Uge':
         unique_years = historical_data['StartTimeDenmark'].dt.year.unique()
@@ -115,50 +99,28 @@ def show_conversation_result():
             'Tuesday': 'Tirsdag',
             'Wednesday': 'Onsdag',
             'Thursday': 'Torsdag',
-            'Friday': 'Fredag'
+            'Friday': 'Fredag',
+            'Saturday': 'Lørdag',
+            'Sunday': 'Søndag'
         }
         daily_data['DayOfWeek'] = daily_data['DayOfWeek'].map(day_name_map)
 
-        daily_data['DateWithWeekday'] = daily_data['Day'].dt.strftime('%Y-%m-%d') + ' (' + daily_data['DayOfWeek'] + ')'
-
         all_weekdays = ['Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag']
-        all_dates_with_weekdays = [daily_data[daily_data['DayOfWeek'] == day]['DateWithWeekday'].iloc[0] if not daily_data[daily_data['DayOfWeek'] == day].empty else f'No data ({day})' for day in all_weekdays]
-
-        daily_data['DateWithWeekday'] = pd.Categorical(
-            daily_data['DateWithWeekday'],
-            categories=all_dates_with_weekdays,
+        daily_data['DayOfWeek'] = pd.Categorical(
+            daily_data['DayOfWeek'],
+            categories=all_weekdays,
             ordered=True
         )
 
         st.write(f"## Resultat af opkald (Uge) - {selected_year_week}, Uge {selected_week}")
-        base = alt.Chart(daily_data).encode(
-            x=alt.X('DateWithWeekday:N', title='Ugedag', axis=alt.Axis(labelAngle=0)),
-            y=alt.Y('Antal opkald:Q', title='Antal opkald'),
-            color=alt.condition(
-                alt.datum.Result == 'Answered',
-                alt.value('green'),
-                alt.value('red')
-            )
-        ).properties(
-            height=700,
-            width=900
+
+        chart = alt.Chart(daily_data).mark_bar().encode(
+            x=alt.X('DayOfWeek:O', title='Ugedag', sort=all_weekdays),
+            y='Antal opkald:Q',
+            color='Result:N',
         )
 
-        points = base.mark_circle(size=60).encode(
-            tooltip=[alt.Tooltip('DateWithWeekday:N', title='Ugedag'), alt.Tooltip('Antal opkald:Q', title='Antal opkald'), alt.Tooltip('Result:N', title='Resultat')]
-        )
-
-        text = base.mark_text(
-            align='left',
-            baseline='middle',
-            dx=7
-        ).encode(
-            text='Antal opkald:Q'
-        )
-
-        chart = points + text
-
-        st.altair_chart(chart.interactive(), use_container_width=True)
+        st.altair_chart(chart, use_container_width=True)
 
     if content_tabs == 'Måned':
         unique_years = historical_data['StartTimeDenmark'].dt.year.unique()
@@ -200,34 +162,14 @@ def show_conversation_result():
 
         historical_data_month['Day'] = historical_data_month['StartTimeDenmark'].dt.floor('D')
         daily_data = historical_data_month.groupby(['Day', 'Result']).size().reset_index(name='Antal opkald')
+        daily_data['Day'] = daily_data['Day'].dt.day
 
         st.write(f"## Resultat af opkald (Måned) - {selected_year_month}, Måned {month_names[selected_month_number]}")
-        base = alt.Chart(daily_data).encode(
-            x=alt.X('Day:T', title='Tidspunkt', axis=alt.Axis(format='%Y-%m-%d')),
-            y=alt.Y('Antal opkald:Q', title='Antal opkald'),
-            color=alt.condition(
-                alt.datum.Result == 'Answered',
-                alt.value('green'),
-                alt.value('red')
-            )
-        ).properties(
-            height=700,
-            width=900
+
+        chart = alt.Chart(daily_data).mark_bar().encode(
+            x=alt.X('Day:O', title='Månedsdag'),
+            y='Antal opkald:Q',
+            color='Result:N'
         )
 
-        points = base.mark_circle(size=60).encode(
-            tooltip=[alt.Tooltip('Day:T', title='Tidspunkt', format='%Y-%m-%d'), alt.Tooltip('Antal opkald:Q', title='Antal opkald'), alt.Tooltip('Result:N', title='Resultat')]
-        )
-
-        text = base.mark_text(
-            align='left',
-            baseline='middle',
-            dx=7
-        ).encode(
-            text='Antal opkald:Q'
-        )
-
-        chart = points + text
-
-        st.altair_chart(chart.interactive(), use_container_width=True)
-    
+        st.altair_chart(chart, use_container_width=True)
