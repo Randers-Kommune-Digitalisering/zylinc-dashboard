@@ -25,8 +25,13 @@ def show_conversation_result():
         unique_dates = historical_data['StartTimeDenmark'].dt.date.unique()
         selected_date = st.date_input("Vælg en dato", min_value=min(unique_dates), max_value=max(unique_dates), key='date_input')
 
-        historical_data_today = historical_data[(historical_data['StartTimeDenmark'].dt.date == selected_date) &
-                                                (historical_data['StartTimeDenmark'].dt.time.between(datetime.strptime('06:00', '%H:%M').time(), datetime.strptime('16:00', '%H:%M').time()))]
+        historical_data_today = historical_data[
+            (historical_data['StartTimeDenmark'].dt.date == selected_date) &
+            (historical_data['StartTimeDenmark'].dt.time.between(
+                datetime.strptime('06:00', '%H:%M').time(),
+                datetime.strptime('16:00', '%H:%M').time()
+            ))
+        ]
 
         answered_calls_today = historical_data_today[historical_data_today['Result'] == 'Answered'].shape[0]
         missed_calls_today = historical_data_today[historical_data_today['Result'] == 'Missed'].shape[0]
@@ -47,7 +52,8 @@ def show_conversation_result():
                 alt.value('red')
             )
         ).properties(
-            height=500
+            height=700,
+            width=900
         )
 
         points = base.mark_circle(size=60).encode(
@@ -68,12 +74,27 @@ def show_conversation_result():
 
     if content_tabs == 'Uge':
         unique_years = historical_data['StartTimeDenmark'].dt.year.unique()
-        selected_year = st.selectbox("Vælg et år", unique_years, format_func=lambda x: f'{x}')
+        selected_year_week = st.selectbox(
+            "Vælg et år",
+            unique_years,
+            format_func=lambda x: f'{x}',
+            index=unique_years.tolist().index(st.session_state['selected_year_week']) if 'selected_year_week' in st.session_state and st.session_state['selected_year_week'] is not None else 0,
+            key='year_select_week'
+        )
 
-        unique_weeks = historical_data[historical_data['StartTimeDenmark'].dt.year == selected_year]['StartTimeDenmark'].dt.isocalendar().week.unique()
-        selected_week = st.selectbox("Vælg en uge", unique_weeks, format_func=lambda x: f'Uge {x}')
+        unique_weeks = historical_data[historical_data['StartTimeDenmark'].dt.year == selected_year_week]['StartTimeDenmark'].dt.isocalendar().week.unique()
+        selected_week = st.selectbox(
+            "Vælg en uge",
+            unique_weeks,
+            format_func=lambda x: f'Uge {x}',
+            index=unique_weeks.tolist().index(st.session_state['selected_week']) if 'selected_week' in st.session_state and st.session_state['selected_week'] is not None else 0,
+            key='week_select'
+        )
 
-        start_of_week = pd.to_datetime(f'{selected_year}-W{int(selected_week)}-1', format='%Y-W%W-%w')
+        st.session_state['selected_year_week'] = selected_year_week
+        st.session_state['selected_week'] = selected_week
+
+        start_of_week = pd.to_datetime(f'{selected_year_week}-W{int(selected_week)}-1', format='%Y-W%W-%w')
         end_of_week = start_of_week + pd.Timedelta(days=6)
 
         historical_data_week = historical_data[(historical_data['StartTimeDenmark'] >= start_of_week) & (historical_data['StartTimeDenmark'] <= end_of_week)]
@@ -109,7 +130,7 @@ def show_conversation_result():
             ordered=True
         )
 
-        st.write(f"## Resultat af opkald (Uge) - {selected_year}, Uge {selected_week}")
+        st.write(f"## Resultat af opkald (Uge) - {selected_year_week}, Uge {selected_week}")
         base = alt.Chart(daily_data).encode(
             x=alt.X('DateWithWeekday:N', title='Ugedag', axis=alt.Axis(labelAngle=0)),
             y=alt.Y('Antal opkald:Q', title='Antal opkald'),
@@ -119,7 +140,8 @@ def show_conversation_result():
                 alt.value('red')
             )
         ).properties(
-            height=500
+            height=700,
+            width=900
         )
 
         points = base.mark_circle(size=60).encode(
@@ -140,16 +162,35 @@ def show_conversation_result():
 
     if content_tabs == 'Måned':
         unique_years = historical_data['StartTimeDenmark'].dt.year.unique()
-        selected_year = st.selectbox("Vælg et år", unique_years, format_func=lambda x: f'{x}', key='year_select')
+        selected_year_month = st.selectbox(
+            "Vælg et år",
+            unique_years,
+            format_func=lambda x: f'{x}',
+            index=unique_years.tolist().index(st.session_state['selected_year_month']) if 'selected_year_month' in st.session_state and st.session_state['selected_year_month'] is not None else 0,
+            key='year_select_month'
+        )
 
-        unique_months = historical_data[historical_data['StartTimeDenmark'].dt.year == selected_year]['StartTimeDenmark'].dt.to_period('M').unique()
+        unique_months = historical_data[historical_data['StartTimeDenmark'].dt.year == selected_year_month]['StartTimeDenmark'].dt.to_period('M').unique()
         month_names = {1: 'Januar', 2: 'Februar', 3: 'Marts', 4: 'April', 5: 'Maj', 6: 'Juni', 7: 'Juli', 8: 'August', 9: 'September', 10: 'Oktober', 11: 'November', 12: 'December'}
         month_options = [(month.month, month_names[month.month]) for month in unique_months]
-        selected_month = st.selectbox("Vælg en måned", month_options, format_func=lambda x: x[1], key='month_select')
+
+        if 'selected_month' not in st.session_state or st.session_state['selected_month'] is None:
+            st.session_state['selected_month'] = month_options[0][0] if month_options else None
+
+        selected_month = st.selectbox(
+            "Vælg en måned",
+            month_options,
+            format_func=lambda x: x[1],
+            index=[month[0] for month in month_options].index(st.session_state['selected_month']) if 'selected_month' in st.session_state and st.session_state['selected_month'] is not None else 0,
+            key='month_select'
+        )
+
+        st.session_state['selected_year_month'] = selected_year_month
+        st.session_state['selected_month'] = selected_month[0]
 
         selected_month_number = selected_month[0]
 
-        historical_data_month = historical_data[historical_data['StartTimeDenmark'].dt.to_period('M') == pd.Period(year=selected_year, month=selected_month_number, freq='M')]
+        historical_data_month = historical_data[historical_data['StartTimeDenmark'].dt.to_period('M') == pd.Period(year=selected_year_month, month=selected_month_number, freq='M')]
 
         answered_calls_month = historical_data_month[historical_data_month['Result'] == 'Answered'].shape[0]
         missed_calls_month = historical_data_month[historical_data_month['Result'] == 'Missed'].shape[0]
@@ -160,7 +201,7 @@ def show_conversation_result():
         historical_data_month['Day'] = historical_data_month['StartTimeDenmark'].dt.floor('D')
         daily_data = historical_data_month.groupby(['Day', 'Result']).size().reset_index(name='Antal opkald')
 
-        st.write(f"## Resultat af opkald (Måned) - {selected_year}, Måned {month_names[selected_month_number]}")
+        st.write(f"## Resultat af opkald (Måned) - {selected_year_month}, Måned {month_names[selected_month_number]}")
         base = alt.Chart(daily_data).encode(
             x=alt.X('Day:T', title='Tidspunkt', axis=alt.Axis(format='%Y-%m-%d')),
             y=alt.Y('Antal opkald:Q', title='Antal opkald'),
@@ -170,7 +211,8 @@ def show_conversation_result():
                 alt.value('red')
             )
         ).properties(
-            height=500
+            height=700,
+            width=900
         )
 
         points = base.mark_circle(size=60).encode(
@@ -188,3 +230,4 @@ def show_conversation_result():
         chart = points + text
 
         st.altair_chart(chart.interactive(), use_container_width=True)
+    

@@ -43,23 +43,48 @@ def show_conversation_duration():
             color=alt.Color('AgentDisplayName:N', title='Medarbejder'),
             tooltip=[alt.Tooltip('TimeInterval:T', title='Tidspunkt', format='%H:%M'), alt.Tooltip('DurationMinutes:Q', title='Varighed (minutter)'), alt.Tooltip('AgentDisplayName:N', title='Medarbejder')]
         ).properties(
-            height=500
+            height=700,
+            width=900
         )
         st.altair_chart(chart, use_container_width=True)
 
     if content_tabs == 'Uge':
         unique_years = historical_data['StartTimeDenmark'].dt.year.unique()
-        selected_year = st.selectbox("Vælg et år", unique_years, format_func=lambda x: f'{x}')
+        selected_year_week = st.selectbox(
+            "Vælg et år",
+            unique_years,
+            format_func=lambda x: f'{x}',
+            index=unique_years.tolist().index(st.session_state['selected_year_week']) if 'selected_year_week' in st.session_state and st.session_state['selected_year_week'] is not None else 0,
+            key='year_select_week'
+        )
 
-        unique_weeks = historical_data[historical_data['StartTimeDenmark'].dt.year == selected_year]['StartTimeDenmark'].dt.isocalendar().week.unique()
-        selected_week = st.selectbox("Vælg en uge", unique_weeks, format_func=lambda x: f'Uge {x}')
+        unique_weeks = historical_data[historical_data['StartTimeDenmark'].dt.year == selected_year_week]['StartTimeDenmark'].dt.isocalendar().week.unique()
 
-        start_of_week = pd.to_datetime(f'{selected_year}-W{int(selected_week)}-1', format='%Y-W%W-%w')
+        if 'selected_week' not in st.session_state or st.session_state['selected_week'] not in unique_weeks:
+            st.session_state['selected_week'] = unique_weeks[0] if unique_weeks else None
+
+        selected_week = st.selectbox(
+            "Vælg en uge",
+            unique_weeks,
+            format_func=lambda x: f'Uge {x}',
+            index=unique_weeks.tolist().index(st.session_state['selected_week']) if 'selected_week' in st.session_state and st.session_state['selected_week'] is not None else 0,
+            key='week_select'
+        )
+
+        st.session_state['selected_year_week'] = selected_year_week
+        st.session_state['selected_week'] = selected_week
+
+        start_of_week = pd.to_datetime(f'{selected_year_week}-W{int(selected_week)}-1', format='%Y-W%W-%w')
         end_of_week = start_of_week + pd.Timedelta(days=6)
 
-        historical_data_week = historical_data[(historical_data['StartTimeDenmark'] >= start_of_week) &
-                                               (historical_data['StartTimeDenmark'] <= end_of_week) &
-                                               (historical_data['StartTimeDenmark'].dt.time.between(datetime.strptime('06:00', '%H:%M').time(), datetime.strptime('16:00', '%H:%M').time()))]
+        historical_data_week = historical_data[
+            (historical_data['StartTimeDenmark'] >= start_of_week) &
+            (historical_data['StartTimeDenmark'] <= end_of_week) &
+            (historical_data['StartTimeDenmark'].dt.time.between(
+                datetime.strptime('06:00', '%H:%M').time(),
+                datetime.strptime('16:00', '%H:%M').time()
+            ))
+        ]
 
         avg_duration_week = historical_data_week[historical_data_week['Result'] == 'Answered']['DurationMinutes'].mean()
 
@@ -67,14 +92,32 @@ def show_conversation_duration():
 
         chart_data = historical_data_week[['StartTimeDenmark', 'DurationMinutes', 'AgentDisplayName']]
 
-        st.write(f"## Varighed af samtale(Uge) - {selected_year}, Uge {selected_week}")
+        chart_data = chart_data.dropna(subset=['DurationMinutes', 'AgentDisplayName'])
+
+        day_name_map = {
+            'Monday': 'Mandag',
+            'Tuesday': 'Tirsdag',
+            'Wednesday': 'Onsdag',
+            'Thursday': 'Torsdag',
+            'Friday': 'Fredag',
+            'Saturday': 'Lørdag',
+            'Sunday': 'Søndag'
+        }
+
+        chart_data['DayName'] = chart_data['StartTimeDenmark'].dt.strftime('%A').map(day_name_map)
+        chart_data['ConversationDateWithDay'] = chart_data['StartTimeDenmark'].dt.strftime('%Y-%m-%d') + ' (' + chart_data['DayName'] + ')'
+
+        chart_data = chart_data.groupby(['ConversationDateWithDay', 'AgentDisplayName']).agg({'DurationMinutes': 'sum'}).reset_index()
+
+        st.write(f"## Varighed af samtale(Uge) - {selected_year_week}, Uge {selected_week}")
         chart = alt.Chart(chart_data).mark_bar().encode(
-            x=alt.X('StartTimeDenmark:T', title='Tidspunkt', axis=alt.Axis(format='%Y-%m-%d %H:%M')),
+            x=alt.X('ConversationDateWithDay:N', title='Dato', axis=alt.Axis(labelAngle=-45)),
             y=alt.Y('DurationMinutes:Q', title='Varighed (minutter)'),
             color=alt.Color('AgentDisplayName:N', title='Medarbejder'),
-            tooltip=[alt.Tooltip('StartTimeDenmark:T', title='Tidspunkt', format='%Y-%m-%d %H:%M'), alt.Tooltip('DurationMinutes:Q', title='Varighed (minutter)'), alt.Tooltip('AgentDisplayName:N', title='Medarbejder')]
+            tooltip=[alt.Tooltip('ConversationDateWithDay:N', title='Dato'), alt.Tooltip('DurationMinutes:Q', title='Varighed (minutter)'), alt.Tooltip('AgentDisplayName:N', title='Medarbejder')]
         ).properties(
-            height=500
+            height=700,
+            width=900
         )
         st.altair_chart(chart, use_container_width=True)
 
