@@ -35,18 +35,22 @@ def show_conversation_result():
 
         answered_calls_today = historical_data_today[historical_data_today['Result'] == 'Answered'].shape[0]
         missed_calls_today = historical_data_today[historical_data_today['Result'] == 'Missed'].shape[0]
+        received_calls_today = answered_calls_today + missed_calls_today
 
+        st.metric(label="Antal modtagne opkald", value=received_calls_today)
         st.metric(label="Antal besvarede opkald", value=answered_calls_today)
         st.metric(label="Antal mistede opkald", value=missed_calls_today)
 
         historical_data_today['TimeInterval'] = historical_data_today['StartTimeDenmark'].dt.floor('30T')
         interval_data = historical_data_today.groupby(['TimeInterval', 'Result']).size().reset_index(name='Antal opkald')
 
+        interval_data['TimeInterval_Result'] = interval_data['TimeInterval'].astype(str) + '_' + interval_data['Result']
+
         st.write(f"## Resultat af opkald (Dag) - {selected_date}")
 
         chart = alt.Chart(interval_data).mark_bar().encode(
-            x=alt.X('TimeInterval:T', title='Tidspunkt', axis=alt.Axis(format='%H:%M')),
-            y='Antal opkald:Q',
+            x=alt.X('TimeInterval_Result:N', title='Tidspunkt', axis=alt.Axis(labelAngle=-45)),
+            y=alt.Y('Antal opkald:Q', title='Antal opkald'),
             color='Result:N',
             tooltip=[alt.Tooltip('TimeInterval:T', title='Tidspunkt', format='%H:%M'), alt.Tooltip('Antal opkald:Q', title='Antal opkald'), alt.Tooltip('Result:N', title='Resultat')]
         ).properties(
@@ -85,7 +89,9 @@ def show_conversation_result():
 
         answered_calls_week = historical_data_week[historical_data_week['Result'] == 'Answered'].shape[0]
         missed_calls_week = historical_data_week[historical_data_week['Result'] == 'Missed'].shape[0]
+        received_calls_week = answered_calls_week + missed_calls_week
 
+        st.metric(label="Antal modtagne opkald", value=received_calls_week)
         st.metric(label="Antal besvarede opkald", value=answered_calls_week)
         st.metric(label="Antal mistede opkald", value=missed_calls_week)
 
@@ -156,7 +162,9 @@ def show_conversation_result():
 
         answered_calls_month = historical_data_month[historical_data_month['Result'] == 'Answered'].shape[0]
         missed_calls_month = historical_data_month[historical_data_month['Result'] == 'Missed'].shape[0]
+        received_calls_month = answered_calls_month + missed_calls_month
 
+        st.metric(label="Antal modtagne opkald", value=received_calls_month)
         st.metric(label="Antal besvarede opkald", value=answered_calls_month)
         st.metric(label="Antal mistede opkald", value=missed_calls_month)
 
