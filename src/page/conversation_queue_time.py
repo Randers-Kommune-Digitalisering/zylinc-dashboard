@@ -100,12 +100,16 @@ def show_queue_time():
 
         queue_data['QueueDurationHMS'] = queue_data['QueueDurationMinutes'].apply(convert_minutes_to_hms)
 
+        weekdays = {0: 'Mandag', 1: 'Tirsdag', 2: 'Onsdag', 3: 'Torsdag', 4: 'Fredag'}
+        queue_data['Day'] = queue_data['StartTimeDenmark'].dt.weekday.map(weekdays)
+        daily_queue_data = queue_data.groupby('Day').agg({'QueueDurationMinutes': 'sum', 'QueueName': 'first'}).reset_index()
+
         st.write(f"## Ventetid i kø (Uge) - {selected_year_week}, Uge {selected_week}")
-        chart = alt.Chart(queue_data).mark_bar().encode(
-            x=alt.X('StartTimeDenmark:T', title='Tidspunkt', axis=alt.Axis(format='%Y-%m-%d (%A)')),
+        chart = alt.Chart(daily_queue_data).mark_bar().encode(
+            x=alt.X('Day:N', title='Dag', sort=['Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag']),
             y=alt.Y('QueueDurationMinutes:Q', title='Ventetid (minutter)'),
             color=alt.Color('QueueName:N', title='Kø'),
-            tooltip=[alt.Tooltip('StartTimeDenmark:T', title='Tidspunkt', format='%Y-%m-%d (%A)'), alt.Tooltip('QueueDurationHMS:N', title='Ventetid'), alt.Tooltip('QueueName:N', title='Kø')]
+            tooltip=[alt.Tooltip('Day:N', title='Dag'), alt.Tooltip('QueueDurationMinutes:Q', title='Ventetid (minutter)'), alt.Tooltip('QueueName:N', title='Kø')]
         ).properties(
             height=700,
             width=900
@@ -153,12 +157,15 @@ def show_queue_time():
 
         queue_data['QueueDurationHMS'] = queue_data['QueueDurationMinutes'].apply(convert_minutes_to_hms)
 
+        queue_data['Day'] = queue_data['StartTimeDenmark'].dt.day
+        daily_queue_data = queue_data.groupby('Day').agg({'QueueDurationMinutes': 'sum', 'QueueName': 'first'}).reset_index()
+
         st.write(f"## Ventetid i kø (Måned) - {selected_year_month}, Måned {month_names[selected_month_number]}")
-        chart = alt.Chart(queue_data).mark_bar().encode(
-            x=alt.X('StartTimeDenmark:T', title='Tidspunkt', axis=alt.Axis(format='%Y-%m-%d %H:%M')),
+        chart = alt.Chart(daily_queue_data).mark_bar().encode(
+            x=alt.X('Day:O', title='Dag', axis=alt.Axis(format='d')),
             y=alt.Y('QueueDurationMinutes:Q', title='Ventetid (minutter)'),
             color=alt.Color('QueueName:N', title='Kø'),
-            tooltip=[alt.Tooltip('StartTimeDenmark:T', title='Tidspunkt', format='%Y-%m-%d %H:%M'), alt.Tooltip('QueueDurationHMS:N', title='Ventetid'), alt.Tooltip('QueueName:N', title='Kø')]
+            tooltip=[alt.Tooltip('Day:O', title='Dag'), alt.Tooltip('QueueDurationMinutes:Q', title='Ventetid (minutter)'), alt.Tooltip('QueueName:N', title='Kø')]
         ).properties(
             height=700,
             width=900
