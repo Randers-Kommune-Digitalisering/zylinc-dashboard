@@ -70,6 +70,10 @@ def show_queue_time():
         )
 
         unique_weeks = historical_data[historical_data['StartTimeDenmark'].dt.year == selected_year_week]['StartTimeDenmark'].dt.isocalendar().week.unique()
+
+        if 'selected_week' not in st.session_state or st.session_state['selected_week'] not in unique_weeks:
+            st.session_state['selected_week'] = unique_weeks[0] if unique_weeks else None
+
         selected_week = st.selectbox(
             "Vælg en uge",
             unique_weeks,
